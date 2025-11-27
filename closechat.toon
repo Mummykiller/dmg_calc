@@ -1,0 +1,26 @@
+// Toon Transcribing Object Oriented Notation for Closing Chat Session
+
+@Action: Pre-Close_Checklist
+  Description: A set of instructions for Gemini to execute before closing a chat session to ensure a smooth continuation of work in the next session.
+
+  @Step: 1 - Summarize_Current_State
+    @Instruction: "Review the last 5 commands and create a brief summary of the last completed user request and the current state of the project. This summary should include the next logical steps or any unresolved user requests. Write this summary to a new file named `closedchat.md`."
+
+  @Step: 2 - Check_Git_Status
+    @Instruction: "Run `git status --porcelain` to check for any uncommitted changes."
+    @Sub-Instruction: If_Changes_Exist
+      @Instruction: "Add all untracked and modified files using `git add .`"
+      @Instruction: "Commit the changes with a descriptive message, such as 'feat: Save work-in-progress before closing session'."
+    @Sub-Instruction: If_No_Changes
+      @Instruction: "Print a message to the user: 'No uncommitted changes to save.'"
+
+  @Step: 3 - Final_Context_Save
+    @Instruction: "Append a note to the project's `GEMINI.md` file. The note should instruct Gemini to automatically read the `closedchat.md` file immediately after processing `GEMINI.md` at the start of every session for this project."
+    @Example_Note:
+      "---
+      ## Gemini Added Memories
+      - The user wants me to automatically read `closedchat.md` immediately after processing `GEMINI.md` at the start of every session for this project.
+      ---"
+
+  @Step: 4 - Confirmation
+    @Instruction: "Inform the user that the session state has been saved and is ready for closure."
