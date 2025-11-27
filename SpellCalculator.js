@@ -75,25 +75,18 @@ class SpellCalculator {
         const inputs = this._getInputs();
 
         let baseDamage = inputs.baseDamage;
-        if (inputs.isMaximized) {
-            // Assuming the dice notation is something like '10d6+50', we need to maximize the dice part.
-            // This is a simplified maximization, assuming a single dice term.
-            const diceMatch = this.spellDamageInput.value.match(/(\d+)d(\d+)/);
-            if (diceMatch) {
-                const numDice = parseInt(diceMatch[1]);
-                const numSides = parseInt(diceMatch[2]);
-                const flatPart = baseDamage - (numDice * (numSides + 1) / 2);
-                baseDamage = (numDice * numSides) + flatPart;
-            }
-        }
-        if (inputs.isEmpowered) {
-            // Empower adds 75% to the base damage.
-            baseDamage *= 1.75;
-        }
+        // Metamagics now directly add to Spell Power, not base damage multipliers.
+        // The baseDamage variable is now just the parsed input base damage.
 
         let metamagicSpellPower = 0;
         if (inputs.isIntensified) {
             metamagicSpellPower += 75;
+        }
+        if (inputs.isEmpowered) {
+            metamagicSpellPower += 75;
+        }
+        if (inputs.isMaximized) {
+            metamagicSpellPower += 150;
         }
 
         this.metamagicSpellPowerBonusSpan.textContent = metamagicSpellPower;
