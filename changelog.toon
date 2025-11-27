@@ -1,0 +1,56 @@
+// Toon Transcribing Object Oriented Notation for Project Updates
+
+@Project: DDO_Damage_Calculator
+  Description: This document summarizes the recent additions and modifications to the DDO Damage Calculator application.
+
+  @Update: Feature_Spell_Calculator
+    Description: A new feature for calculating spell damage has been added to the application, existing as a new type of calculator set.
+
+    @Component: Spell_Calculator_UI
+      Description: A new UI template (`spell-calculator-template`) has been added to `index.html` to support spell calculations.
+      - Input_Fields:
+        - Base_Damage: Input for spell damage dice notation (e.g., "10d6+50").
+        - Caster_Level: Input for the character's caster level.
+        - Spell_Power: Input for the base spell power.
+          - Metamagic_Bonus_Display: A read-only field showing the spell power bonus from active metamagics.
+        - Spell_Crit_Chance: Input for spell critical hit chance percentage.
+        - Spell_Crit_Damage: Input for additional spell critical damage percentage.
+        - Target_MRR: Input for the target's Magical Resistance Rating.
+      - Metamagic_Toggles:
+        - Empower: Checkbox to enable Empower metamagic.
+        - Maximize: Checkbox to enable Maximize metamagic.
+        - Intensify: Checkbox to enable Intensify metamagic.
+      - Results_Display:
+        - Shows Average Base Hit, Average Critical Hit, Total Average Damage (pre-MRR), MRR Mitigation, and Final Average Damage.
+
+    @Component: SpellCalculator (Class)
+      Description: A new JavaScript class (`SpellCalculator.js`) has been created to handle the logic for the spell calculator.
+      - `_getInputs()`: Gathers and parses all values from the spell calculator UI.
+      - `calculateSpellDamage()`: The core logic method that:
+        - Calculates the total spell power, including bonuses from metamagics.
+        - Updates the metamagic spell power bonus display.
+        - Calculates average and critical hit damage based on spell power and crit stats.
+        - Factors in crit chance to determine total average damage.
+        - Applies MRR to calculate the final damage.
+      - `getState()` / `setState()`: Manages the saving and loading of the spell calculator's state.
+
+    @Component: CalculatorManager (Updates)
+      Description: The central `CalculatorManager` has been updated to manage both weapon and spell calculator sets.
+      - `addNewSpellSet()`: A new method to create and manage `SpellCalculator` instances.
+      - `saveState()` / `loadState()`: Updated to include a 'type' property ('weapon' or 'spell') to differentiate between set types during session storage.
+      - `updateComparisonTable()`: Modified to correctly display and compare results from both calculator types.
+
+  @Update: Metamagic_Logic_Correction
+    Description: The implementation of metamagic feats for spells has been corrected and expanded.
+    - @Change: Empower
+      - Previously implemented as a base damage multiplier.
+      - Corrected to add +75 Spell Power.
+    - @Change: Maximize
+      - Previously affected base damage dice rolls.
+      - Corrected to add +150 Spell Power.
+    - @Change: Intensify
+      - A new metamagic feat has been added.
+      - Adds +75 Spell Power when active.
+
+  @Artefact: DDO_Spell_Scaling.toon
+    Description: A new `.toon` file was created to document the core mechanics of spell damage scaling in DDO, based on web research. This file serves as a knowledge base for the spell damage system.
