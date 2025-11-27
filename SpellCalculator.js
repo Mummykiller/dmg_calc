@@ -31,9 +31,11 @@ class SpellCalculator {
         this.targetMrrInput = get('target-mrr');
         this.empowerCheckbox = get('metamagic-empower');
         this.maximizeCheckbox = get('metamagic-maximize');
+        this.intensifyCheckbox = get('metamagic-intensify');
         this.calculateBtn = get('calculate-spell-btn');
 
         // Output elements
+        this.metamagicSpellPowerBonusSpan = get('metamagic-spell-power-bonus');
         this.avgSpellDamageSpan = get('avg-spell-damage');
         this.avgSpellCritDamageSpan = get('avg-spell-crit-damage');
         this.totalAvgSpellDamageSpan = get('total-avg-spell-damage');
@@ -65,6 +67,7 @@ class SpellCalculator {
             targetMrr: parseInt(this.targetMrrInput.value) || 0,
             isEmpowered: this.empowerCheckbox.checked,
             isMaximized: this.maximizeCheckbox.checked,
+            isIntensified: this.intensifyCheckbox.checked,
         };
     }
 
@@ -88,7 +91,15 @@ class SpellCalculator {
             baseDamage *= 1.75;
         }
 
-        const spellPowerMultiplier = 1 + (inputs.spellPower / 100);
+        let metamagicSpellPower = 0;
+        if (inputs.isIntensified) {
+            metamagicSpellPower += 75;
+        }
+
+        this.metamagicSpellPowerBonusSpan.textContent = metamagicSpellPower;
+        const totalSpellPower = inputs.spellPower + metamagicSpellPower;
+
+        const spellPowerMultiplier = 1 + (totalSpellPower / 100);
         const averageHit = baseDamage * spellPowerMultiplier;
 
         const critMultiplier = 2 + inputs.critDamage;

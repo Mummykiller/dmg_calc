@@ -266,6 +266,8 @@
                     <div class="input-group-row">
                         <label for="spell-power">Spell Power</label>
                         <input type="number" id="spell-power" value="500" class="small-input" title="Your spell power for the spell's damage type.">
+                        <span class="plus-symbol">+</span>
+                        <span id="metamagic-spell-power-bonus" class="read-only-bonus">0</span>
                     </div>
                     <div class="input-group-row">
                         <label for="spell-crit-chance">Crit Chance %</label>
@@ -288,6 +290,7 @@
                     <div class="input-group-row">
                         <input type="checkbox" id="metamagic-empower"><label for="metamagic-empower" class="checkbox-label">Empower</label>
                         <input type="checkbox" id="metamagic-maximize"><label for="metamagic-maximize" class="checkbox-label">Maximize</label>
+                        <input type="checkbox" id="metamagic-intensify"><label for="metamagic-intensify" class="checkbox-label">Intensify</label>
                     </div>
                 </div>
                 <button id="calculate-spell-btn">Calculate Spell Damage</button>

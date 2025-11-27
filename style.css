@@ -293,6 +293,15 @@ h1 {
     color: var(--label-color);
 }
 
+.read-only-bonus {
+    padding: 0.5rem;
+    border: 1px solid var(--input-border-color);
+    border-radius: 4px;
+    background-color: var(--stats-group-bg);
+    min-width: 40px;
+    text-align: center;
+}
+
 .checkbox-label {
     flex-basis: auto !important; /* Override the fixed width for checkbox labels in a row */
 }
