@@ -1,0 +1,53 @@
+// Toon Transcribing Object Oriented Notation for DDO Spell Scaling Mechanics
+
+@System: DDO_Spell_Damage
+  Description: A structured breakdown of the core mechanics governing spell damage in Dungeons & Dragons Online.
+
+  @Component: Damage_Calculation_Formula
+    Description: The primary formula used to determine the final damage of a magical spell.
+    - NonCritical_Damage: BaseSpellDamage * (1 + (SpellPower / 100))
+    - Critical_Damage: NonCritical_Damage * CriticalMultiplier
+
+  @Component: Base_Spell_Damage
+    Description: The foundational damage of a spell before any scaling is applied.
+    - Dice_Roll: The inherent dice of the spell (e.g., 1d6, 10d8).
+    - Caster_Level_Bonus: Some spells gain additional dice or damage based on caster level, up to a maximum.
+    - Metamagic_Feats: Feats that alter the base damage.
+      - Empower: Increases the base damage by a percentage.
+      - Maximize: Sets all dice rolls to their maximum value.
+
+  @Component: Spell_Power
+    Description: A percentage-based multiplier that increases spell damage. The primary scaling statistic for casters.
+    - Types:
+      - Elemental_Spell_Power: Specific to a damage type (e.g., Fire, Cold, Acid, Electric, Sonic, Light, Alignment).
+      - Universal_Spell_Power: Adds to all specific spell power types.
+      - Potency: A type of Universal Spell Power that typically does not stack with other Potency effects.
+    - Formula_Integration: A value of 150 Spell Power results in a 150% increase, or a multiplier of 2.5x. (1 + 150/100)
+
+  @Component: Spell_Criticals
+    Description: The mechanic that allows spells to deal significantly more damage on a critical hit.
+    - Critical_Chance: The percentage chance for a spell to be a critical hit. Sourced from gear, feats, and enhancements.
+    - Critical_Multiplier: The amount by which damage is multiplied on a critical hit.
+      - Base_Multiplier: 2x (A critical hit deals double damage by default).
+      - Additional_Multiplier: Added to the base multiplier. E.g., 50% additional critical damage results in a 2.5x multiplier.
+      - Formula: `(1 + (BaseCritDmg=100)/100 + (AdditionalCritDmg/100))` which simplifies to `2.0 + (AdditionalCritDmg/100)`.
+
+  @Component: Target_Defenses
+    Description: Stats that the target possesses which can reduce incoming spell damage. Applied after all offensive calculations.
+    - Elemental_Resistance: Reduces damage of a specific element (e.g., Fire Resistance reduces Fire damage).
+    - Spell_Resistance: Provides a chance to completely negate a spell's effects. Requires a caster level check.
+    - Evasion: Allows a character to take no damage from area-of-effect spells on a successful reflex save.
+    - Magical_Resistance_Rating_(MRR): Provides a percentage-based reduction to magical damage.
+
+  @Feature: Caster_Level_Effects
+    Description: The character's level in a specific spellcasting class influences spell effectiveness.
+    - Damage_Dice: Higher caster levels can increase the number of damage dice for certain spells.
+    - Duration: Affects the duration of buffs, debuffs, and crowd control.
+    - Spell_Penetration: The ability to overcome a target's Spell Resistance.
+
+  @Feature: Metamagic
+    Description: Special feats that allow a caster to modify their spells for greater effect, usually at the cost of more spell points.
+    - Empower: Increases spell damage.
+    - Maximize: Maximizes the variable, numerical effects of a spell.
+    - Quicken: Makes spells cast faster and uninterruptible.
+    - Heighten: Increases the spell's difficulty class (DC), making it harder to resist.

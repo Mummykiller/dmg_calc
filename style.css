@@ -1,0 +1,647 @@
+:root {
+    --bg-color: #f0f2f5;
+    --container-bg: #ffffff;
+    --text-color: #333;
+    --header-color: #1a237e;
+    --stats-group-bg: #f9f9f9;
+    --border-color: #e0e0e0;
+    --input-border-color: #ccc;
+    --label-color: #555;
+    --button-bg: #3949ab;
+    --button-hover-bg: #283593;
+    --button-text-color: white;
+    --accent-color: #c62828;
+    --table-header-bg: #e8eaf6;
+    --table-header-text: #3949ab;
+    --table-row-odd-bg: #f9f9f9;
+    --crit-row-bg: #ffebee;
+    --crit-row-text: #c62828;
+    --graze-row-bg: #fffde7;
+    --graze-row-text: #f57f17;
+}
+
+.dark-mode {
+    --bg-color: #121212;
+    --container-bg: #1e1e1e;
+    --text-color: #e0e0e0;
+    --header-color: #9fa8da;
+    --stats-group-bg: #2a2a2a;
+    --border-color: #424242;
+    --input-border-color: #555;
+    --label-color: #bbb;
+    --button-bg: #5c6bc0;
+    --button-hover-bg: #7986cb;
+    --accent-color: #ef9a9a;
+    --table-header-bg: #3949ab;
+    --table-header-text: #e8eaf6;
+    --table-row-odd-bg: #2c2c2c;
+    --crit-row-bg: #4a1f1f;
+    --crit-row-text: #ef9a9a;
+    --graze-row-bg: #4a442a;
+    --graze-row-text: #ffd54f;
+}
+
+body {
+    font-family: sans-serif;
+    background-color: var(--bg-color);
+    color: var(--text-color);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    margin: 0;
+}
+
+.page-wrapper {
+    width: 100%;
+    max-width: 1920px;
+    padding: 2rem;
+}
+
+.set-navigation {
+    display: flex;
+    margin-bottom: -1px; /* Overlap the container's border */
+    position: relative;
+    z-index: 1;
+}
+
+.nav-tab {
+    background-color: var(--stats-group-bg);
+    border: 1px solid var(--border-color);
+    border-bottom: none;
+    padding: 0.75rem 1.5rem;
+    padding-top: calc(0.75rem - 3px); /* Adjust for border */
+    cursor: pointer;
+    font-size: 1rem;
+    color: var(--label-color);
+    border-radius: 8px 8px 0 0;
+    margin-right: 0.5rem;
+    border-top: 3px solid transparent; /* Placeholder for active indicator */
+    transition: border-color 0.2s, color 0.2s, background-color 0.2s;
+    position: relative; /* Needed for absolute positioning of the close button */
+}
+
+.nav-tab:not(.active):hover {
+    background-color: var(--bg-color);
+    border-top-color: var(--border-color);
+    color: var(--text-color);
+}
+
+.nav-tab.active .tab-name {
+    color: var(--header-color);
+}
+
+#add-set-btn {
+    border: 1px dashed var(--border-color);
+    background-color: transparent;
+    color: var(--label-color);
+    font-size: 1.5rem;
+    font-weight: bold;
+    padding: 0.2rem 1rem;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: border-color 0.2s, color 0.2s;
+}
+
+#add-set-btn:hover {
+    border-color: var(--accent-color);
+}
+
+.nav-action-btn {
+    background-color: var(--stats-group-bg);
+    border: 1px solid var(--border-color);
+    padding: 0.75rem 1.5rem;
+    cursor: pointer;
+    font-size: 1rem;
+    color: var(--label-color);
+    border-radius: 8px;
+    margin-left: 0.5rem;
+}
+
+.tab-name {
+    display: inline-block;
+    padding: 0 0.5rem;
+    padding-left: 1.5rem; /* Make space for the close button */
+    min-width: 50px;
+    border-radius: 3px;
+}
+
+.tab-name:focus {
+    outline: 1px solid var(--accent-color);
+    background-color: var(--container-bg);
+}
+
+.close-tab-btn {
+    position: absolute;
+    top: 4px;
+    left: 4px;
+    color: var(--accent-color);
+    background: none;
+    border: none;
+    font-weight: bold;
+    border-radius: 50%;
+    cursor: pointer;
+    padding: 0;
+    font-size: 1.2rem;
+    width: 22px;
+    height: 22px;
+    line-height: 22px;
+    text-align: center;
+    transition: background-color 0.2s;
+}
+
+.close-tab-btn:hover {
+    background-color: var(--border-color);
+}
+
+.nav-tab.active {
+    background-color: var(--container-bg);
+    color: var(--header-color);
+    border-bottom: 1px solid var(--container-bg); /* Make it look connected */
+    border-top-color: var(--accent-color); /* Highlight for active tab */
+    font-weight: bold;
+}
+
+/* --- Drag and Drop Styles --- */
+.nav-tab.dragging {
+    opacity: 0.5;
+}
+
+.nav-tab.drag-over-indicator {
+    /* Add a line to the left of the tab to show where the dragged tab will be dropped */
+    border-left: 3px solid var(--accent-color);
+}
+
+#add-set-btn.drag-over-end-indicator {
+    border: 1px dashed var(--accent-color); /* Highlight the add button */
+    background-color: rgba(var(--accent-color-rgb), 0.1); /* Subtle background */
+}
+
+.nav-tab-placeholder {
+    background-color: transparent;
+    border: 2px dashed var(--accent-color);
+    border-radius: 8px 8px 0 0;
+    margin-right: 0.5rem;
+    box-sizing: border-box; /* Ensure border is included in width/height */
+}
+
+.calculator-container {
+    background-color: var(--container-bg);
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    border: 1px solid var(--border-color);
+    padding: 2rem;
+}
+
+.title-wrapper {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+}
+
+h1 {
+    color: var(--header-color);    
+    margin: 0; /* Reset margin for h1 */
+}
+
+.subtitle {
+    margin-bottom: 1.5rem;
+}
+
+.calculator-set {
+    display: none;
+}
+
+.calculator-set.active {
+    display: block;
+}
+
+#calculate-btn {
+    margin-top: 0.5rem;
+}
+
+.stats-group {
+    background-color: var(--stats-group-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    padding: 0.6rem 0.75rem;
+    margin-bottom: 0.75rem;
+}
+
+.input-group-row {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    flex-wrap: wrap; /* Allow items to wrap onto new lines */
+}
+
+.input-group-row:not(:last-child) {
+    margin-bottom: 0.6rem;
+}
+
+.input-group-row label {
+    flex-basis: 100px; /* Give labels a fixed width */
+    flex-shrink: 0;
+}
+
+.example-text {
+    font-size: 0.8rem;
+    color: var(--label-color);
+    opacity: 0.8;
+    text-align: center;
+    margin-bottom: 0.2rem;
+}
+
+.input-group {
+    margin-bottom: 0.75rem;
+}
+
+.input-group label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-weight: bold;
+    color: var(--label-color);
+}
+
+.input-group input {
+    width: 100%;
+    padding: 0.5rem;
+    border: 1px solid var(--input-border-color);
+    border-radius: 4px;
+    box-sizing: border-box; /* Important for padding and width */
+    background-color: var(--container-bg);
+    color: var(--text-color);
+}
+
+.input-group-row input {
+    padding: 0.5rem;
+    border: 1px solid var(--input-border-color);
+    border-radius: 4px;
+    box-sizing: border-box;
+}
+
+.small-input {
+    width: 80px;
+}
+
+.plus-symbol, .divider-symbol {
+    font-weight: bold;
+}
+.dice-separator {
+    font-weight: bold;
+    color: var(--label-color);
+}
+
+.checkbox-label {
+    flex-basis: auto !important; /* Override the fixed width for checkbox labels in a row */
+}
+
+.short-label {
+    flex-basis: auto !important;
+    flex-shrink: 1;
+}
+
+.inline-checkbox-label {
+    flex-basis: auto !important;
+}
+
+button {
+    width: 100%;
+    padding: 0.75rem;
+    background-color: var(--button-bg);
+    color: var(--button-text-color);
+    border: none;
+    border-radius: 4px;
+    font-size: 1rem;
+    font-weight: bold;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.small-btn {
+    width: auto;
+    padding: 0.4rem 0.6rem;
+    font-size: 0.8rem;
+    flex-shrink: 0; /* Prevent the button from shrinking */
+    margin: 0;
+}
+
+/* Style for section headlines within a stats-group */
+.section-headline,
+div[id^="unscaled-rows-container"] > label:first-child /* Maintain style for old headline */ {
+    display: block; /* Make it a block element to take up its own line */
+    font-weight: bold;
+    color: var(--label-color);
+    margin-bottom: 0.6rem; /* Add space below the headline */
+    padding-left: 2px; /* Align it slightly with the labels below it */
+}
+
+button:hover {
+    background-color: var(--button-hover-bg);
+}
+
+.results h2 {
+    color: var(--header-color);
+}
+
+.results p {
+    font-size: 1.1rem;
+    margin: 0.5rem 0; /* Reduced bottom margin for tighter spacing */
+}
+
+.results span {
+    font-weight: bold;
+    color: var(--accent-color);
+}
+
+.scaling-breakdown {
+    margin-top: 1rem;
+    border-top: 2px solid var(--border-color);
+    padding-top: 0.75rem;
+}
+.total-damage-summary {
+    margin-top: 1rem !important;
+    padding-top: 0.75rem;
+    border-top: 2px solid var(--border-color);
+    font-size: 1.2rem !important;
+}
+
+.main-grid {
+    display: flex;
+    gap: 2rem;
+}
+
+.input-column {
+    flex: 1;
+}
+
+.results-column {
+    flex: 1;
+    padding-left: 2rem;
+    border-left: 2px solid var(--border-color);
+}
+
+.summary-results {
+    flex: 1; /* Allows the summary to take up available space */
+}
+
+.roll-results table {
+    width: 100%;
+    border-collapse: collapse;
+    text-align: center;
+}
+
+.roll-results th, .roll-results td {
+    padding: 0.4rem;
+    border: 1px solid var(--border-color);
+}
+
+.roll-results th {
+    background-color: var(--table-header-bg);
+    color: var(--table-header-text);
+}
+
+.remove-row-btn {
+    width: auto;
+    height: auto;
+    padding: 0.1rem 0.5rem;
+    font-size: 1.5rem;
+    font-weight: normal;
+    line-height: 1;
+    background-color: transparent;
+    color: var(--accent-color);
+    border: 1px solid transparent;
+    margin-left: auto; /* Pushes the button to the far right */
+}
+.remove-row-btn:hover {
+    background-color: var(--stats-group-bg);
+    border-color: var(--border-color);
+}
+/* --- Modal Styles --- */
+.modal-backdrop {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.6);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+}
+
+.modal-backdrop.hidden {
+    display: none;
+}
+
+.modal {
+    background-color: var(--container-bg);
+    padding: 2rem;
+    border-radius: 8px;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+    width: 90%;
+    max-width: 600px;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.modal h2 {
+    margin: 0;
+    color: var(--header-color);
+}
+
+.modal-format-toggle {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.modal-format-toggle label {
+    font-weight: bold;
+    color: var(--label-color);
+}
+
+.toggle-btn {
+    background-color: var(--stats-group-bg);
+    border: 1px solid var(--border-color);
+    padding: 0.25rem 0.75rem;
+    cursor: pointer;
+    color: var(--label-color);
+    border-radius: 4px;
+}
+
+.toggle-btn.active {
+    background-color: var(--button-bg);
+    color: var(--button-text-color);
+    border-color: var(--button-bg);
+}
+
+.modal textarea {
+    width: 100%;
+    box-sizing: border-box;
+    resize: vertical;
+    background-color: var(--stats-group-bg);
+    color: var(--text-color);
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    padding: 0.5rem;
+    font-family: monospace;
+}
+
+.modal-actions {
+    display: flex;
+    gap: 1rem;
+    justify-content: flex-end;
+}
+
+.modal-actions button {
+    width: auto;
+    padding: 0.5rem 1rem;
+}
+
+#modal-close-btn {
+    background-color: var(--label-color);
+}
+
+#modal-close-btn:hover {
+    background-color: var(--text-color);
+}
+
+.hidden {
+    display: none !important;
+}
+
+#modal-file-input {
+    display: none; /* Hide the default file input */
+}
+
+/* --- Modern Theme Toggle Styles --- */
+.theme-switch-wrapper {
+    display: flex;
+    align-items: center;
+}
+
+.theme-switch {
+    position: relative;
+    display: inline-block;
+    width: 60px;
+    height: 34px;
+    cursor: pointer;
+}
+
+.theme-switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.slider {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: #ccc;
+    transition: .4s;
+}
+
+.slider:before {
+    position: absolute;
+    content: "☀️"; /* Sun icon */
+    height: 26px;
+    width: 26px;
+    left: 4px;
+    bottom: 4px;
+    background-color: white;
+    transition: .4s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.slider.round { border-radius: 34px; }
+.slider.round:before { border-radius: 50%; }
+
+input:checked + .slider { background-color: var(--button-bg); }
+input:checked + .slider:before { transform: translateX(26px); content: "🌙"; } /* Moon icon */
+
+.best-damage-badge {
+    font-weight: bold;
+    color: var(--button-bg);
+    background-color: var(--graze-row-bg);
+    padding: 0.2rem 0.4rem;
+    border-radius: 4px;
+}
+
+.roll-results tbody tr:nth-child(odd) {
+    background-color: var(--table-row-odd-bg);
+}
+
+.roll-results .crit-row {
+    background-color: var(--crit-row-bg) !important; /* Light red for crits */
+    font-weight: bold;
+    color: var(--crit-row-text);
+}
+
+.roll-results .graze-row {
+    background-color: var(--graze-row-bg) !important; /* Light yellow for grazes */
+    color: var(--graze-row-text);
+}
+
+.comparison-container {
+    background-color: var(--container-bg);
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    border: 1px solid var(--border-color);
+    padding: 2rem;
+    margin-top: 2rem;
+}
+
+.comparison-container h2 {
+    color: var(--header-color);
+    margin-top: 0;
+}
+
+#comparison-table {
+    width: 100%;
+    border-collapse: collapse;
+    text-align: center;
+}
+
+#comparison-table th, #comparison-table td {
+    padding: 0.6rem;
+    border: 1px solid var(--border-color);
+}
+
+#comparison-table th {
+    background-color: var(--table-header-bg);
+    color: var(--table-header-text);
+}
+
+/* --- Responsive Design --- */
+@media (max-width: 1280px) {
+    .main-grid {
+        flex-direction: column;
+        gap: 1rem; /* Reduce gap when stacked */
+    }
+
+    .results-column {
+        padding-left: 0;
+        border-left: none;
+        margin-top: 2rem;
+        padding-top: 2rem;
+        border-top: 2px solid var(--border-color);
+    }
+}
+
+@media (max-width: 768px) {
+    .page-wrapper {
+        padding: 1rem;
+    }
+    .calculator-container, .comparison-container {
+        padding: 1rem;
+    }
+}
