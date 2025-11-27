@@ -23,6 +23,7 @@
 
         <nav class="set-navigation">
             <button id="add-set-btn" title="Add a new weapon set for comparison">+</button>
+            <button id="add-spell-set-btn" title="Add a new spell set for comparison">🔮</button>
             <button id="import-btn" class="nav-action-btn" title="Import sets from text or file">Import</button>
             <button id="export-btn" class="nav-action-btn" title="Export sets to text or file">Export</button>
         </nav>
@@ -245,7 +246,70 @@
         </div>
     </template>
 
+    <!-- Template for a single spell calculator set -->
+    <template id="spell-calculator-template">
+        <div class="main-grid">
+            <div class="input-column">
+                <div class="stats-group">
+                    <label class="section-headline">Spell Properties</label>
+                    <div class="input-group-row">
+                        <label for="spell-damage">Base Damage</label>
+                        <input type="text" id="spell-damage" value="10d6" title="The spell's base damage dice (e.g., 10d6+50)">
+                    </div>
+                    <div class="input-group-row">
+                        <label for="caster-level">Caster Level</label>
+                        <input type="number" id="caster-level" value="20" class="small-input" title="Your character's caster level for this spell.">
+                    </div>
+                </div>
+                <div class="stats-group">
+                    <label class="section-headline">Spell Power & Criticals</label>
+                    <div class="input-group-row">
+                        <label for="spell-power">Spell Power</label>
+                        <input type="number" id="spell-power" value="500" class="small-input" title="Your spell power for the spell's damage type.">
+                    </div>
+                    <div class="input-group-row">
+                        <label for="spell-crit-chance">Crit Chance %</label>
+                        <input type="number" id="spell-crit-chance" value="20" class="small-input" title="Your chance to critically hit with the spell.">
+                    </div>
+                    <div class="input-group-row">
+                        <label for="spell-crit-damage">Crit Damage %</label>
+                        <input type="number" id="spell-crit-damage" value="100" class="small-input" title="Your additional spell critical damage (e.g., 100 for a total of x3 multiplier).">
+                    </div>
+                </div>
+                <div class="stats-group">
+                    <label class="section-headline">Target Defenses</label>
+                    <div class="input-group-row">
+                        <label for="target-mrr">Target MRR</label>
+                        <input type="number" id="target-mrr" value="50" class="small-input" title="The target's Magical Resistance Rating.">
+                    </div>
+                </div>
+                <div class="stats-group">
+                    <label class="section-headline">Metamagic</label>
+                    <div class="input-group-row">
+                        <input type="checkbox" id="metamagic-empower"><label for="metamagic-empower" class="checkbox-label">Empower</label>
+                        <input type="checkbox" id="metamagic-maximize"><label for="metamagic-maximize" class="checkbox-label">Maximize</label>
+                    </div>
+                </div>
+                <button id="calculate-spell-btn">Calculate Spell Damage</button>
+            </div>
+            <div class="results-column">
+                <div id="spell-results-container" class="results">
+                    <div class="summary-results">
+                        <h2 id="spell-summary-header">Spell Damage Summary</h2>
+                        <p><strong>Average Base Hit:</strong> <span id="avg-spell-damage">0</span></p>
+                        <p><strong>Average Critical Hit:</strong> <span id="avg-spell-crit-damage">0</span></p>
+                        <p class="total-damage-summary"><strong>Total Average Damage (pre-MRR):</strong> <span id="total-avg-spell-damage">0</span></p>
+                        <hr>
+                        <p><strong>Damage Mitigated by MRR:</strong> <span id="mrr-mitigation">0</span></p>
+                        <p class="total-damage-summary"><strong>Final Average Damage:</strong> <span id="final-spell-damage">0</span></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </template>
+
     <!-- Link to the JavaScript file at the end of the body -->
+    <script src="SpellCalculator.js"></script>
     <script src="script.js"></script>
 </body>
 </html>

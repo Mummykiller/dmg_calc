@@ -367,6 +367,12 @@ button:hover {
     font-size: 1.2rem !important;
 }
 
+hr {
+    border: none;
+    border-top: 2px solid var(--border-color);
+    margin: 1rem 0;
+}
+
 .main-grid {
     display: flex;
     gap: 2rem;

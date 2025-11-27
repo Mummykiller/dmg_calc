@@ -716,6 +716,7 @@ class CalculatorManager {
         this.navContainer = document.querySelector('.set-navigation');
         this.setsContainer = document.querySelector('.calculator-wrapper');
         this.addSetBtn = document.getElementById('add-set-btn');
+        this.addSpellSetBtn = document.getElementById('add-spell-set-btn');
         this.comparisonTbody = document.getElementById('comparison-tbody'); // This is fine
         this.templateHTML = this.getTemplateHTML();
 
@@ -741,6 +742,7 @@ class CalculatorManager {
         this.activeSetId = 1;
 
         this.addSetBtn.addEventListener('click', () => this.addNewSet());
+        this.addSpellSetBtn.addEventListener('click', () => this.addNewSpellSet());
         // Try to load state. If it fails (e.g., first visit), create the initial set.
         if (!this.loadState()) {
             this.addNewSet(1);
@@ -841,6 +843,50 @@ class CalculatorManager {
         this.updateComparisonTable();
     }
 
+    addNewSpellSet(setIdToUse = null) {
+        if (this.calculators.size >= 6) {
+            alert("You have reached the maximum of 6 sets.");
+            return;
+        }
+
+        let newSetId;
+        if (setIdToUse !== null) {
+            newSetId = setIdToUse;
+            if (newSetId >= nextSetId) {
+                nextSetId = newSetId + 1;
+            }
+        } else {
+            newSetId = this.findNextAvailableId();
+        }
+
+        const templateNode = document.getElementById('spell-calculator-template').content.cloneNode(true);
+
+        let modifiedInnerHtml = templateNode.firstElementChild.outerHTML.replace(/\s(id)="([^"]+)"/g, (match, attr, id) => {
+            return ` id="${id}-set${newSetId}"`;
+        });
+        modifiedInnerHtml = modifiedInnerHtml.replace(/for="([^"]+)"/g, (match, id) => {
+            return `for="${id}-set${newSetId}"`;
+        });
+
+        const newSetContainer = document.createElement('div');
+        newSetContainer.id = `calculator-set-${newSetId}`;
+        newSetContainer.className = 'calculator-container calculator-set';
+        newSetContainer.innerHTML = modifiedInnerHtml;
+
+        this.setsContainer.appendChild(newSetContainer);
+
+        const tab = this.createTab(newSetId);
+        this.navContainer.insertBefore(tab, this.addSetBtn);
+
+        this.calculators.set(newSetId, new SpellCalculator(newSetId, this, `Spell Set ${newSetId}`));
+        
+        this.switchToSet(newSetId);
+        if (!this.isLoading) {
+            this.saveState();
+        }
+        this.updateComparisonTable();
+    }
+
     createTab(setId) {
         const tab = document.createElement('div');
         tab.className = 'nav-tab';
@@ -860,7 +906,11 @@ class CalculatorManager {
         tabNameSpan.addEventListener('blur', () => {
             const calc = this.calculators.get(setId);
             if (calc) {
-                calc.handleInputChange(); // This will trigger a save
+                if (calc instanceof Calculator) {
+                    calc.handleInputChange();
+                } else {
+                    calc.calculateSpellDamage();
+                }
                 if (this.activeSetId === setId) {
                     calc.updateSummaryHeader();
                 }
@@ -902,7 +952,11 @@ class CalculatorManager {
                 // Trigger a save and update
                 const calc = this.calculators.get(setId);
                 if (calc) {
-                    calc.handleInputChange();
+                    if (calc instanceof Calculator) {
+                        calc.handleInputChange();
+                    } else {
+                        calc.calculateSpellDamage();
+                    }
                     if (this.activeSetId === setId) calc.updateSummaryHeader();
                 }
             }
@@ -910,12 +964,18 @@ class CalculatorManager {
     }
 
     recreateSet(setId, state, index) {
-        this.addNewSet(setId); // Recreate the set using its original ID
+        if (state.type === 'spell') {
+            this.addNewSpellSet(setId);
+        } else {
+            this.addNewSet(setId);
+        }
         const newCalc = this.calculators.get(setId);
         if (newCalc) {
             newCalc.setState(state);
             newCalc.setTabName(state.tabName);
-            newCalc.updateSummaryHeader();
+            if (newCalc instanceof Calculator) {
+                newCalc.updateSummaryHeader();
+            }
         }
         // When undoing a tab closure, we don't want to automatically switch to it.
         // We'll just make sure the currently active tab remains visibly active.
@@ -941,7 +1001,9 @@ class CalculatorManager {
                     this.recordAction({ type: 'REMOVE_SET', setId, state, index });
         }
 
-        calcToRemove?.removeEventListeners();
+        if (calcToRemove instanceof Calculator) {
+            calcToRemove?.removeEventListeners();
+        }
         this.calculators.delete(setId);
 
         document.getElementById(`calculator-set-${setId}`).remove();
@@ -973,7 +1035,10 @@ class CalculatorManager {
         document.querySelector(`.nav-tab[data-set="${setId}"]`).classList.add('active');
         document.getElementById(`calculator-set-${setId}`).classList.add('active');
         this.activeSetId = setId;
-        this.calculators.get(setId)?.updateSummaryHeader(); // Update the header of the newly active set
+        const calc = this.calculators.get(setId);
+        if (calc instanceof Calculator) {
+            calc.updateSummaryHeader();
+        }
     }
 
     updateComparisonTable() {
@@ -1014,21 +1079,30 @@ class CalculatorManager {
             diffCell.innerHTML = diffText; // Safe because diffText is internally generated ('Best' badge or a number)
             row.appendChild(diffCell);
 
-            const baseCell = document.createElement('td');
-            baseCell.textContent = calc.totalAvgBaseHitDmg.toFixed(2);
-            row.appendChild(baseCell);
+            if (calc instanceof Calculator) {
+                const baseCell = document.createElement('td');
+                baseCell.textContent = calc.totalAvgBaseHitDmg.toFixed(2);
+                row.appendChild(baseCell);
 
-            const sneakCell = document.createElement('td');
-            sneakCell.textContent = calc.totalAvgSneakDmg.toFixed(2);
-            row.appendChild(sneakCell);
+                const sneakCell = document.createElement('td');
+                sneakCell.textContent = calc.totalAvgSneakDmg.toFixed(2);
+                row.appendChild(sneakCell);
 
-            const imbueCell = document.createElement('td');
-            imbueCell.textContent = calc.totalAvgImbueDmg.toFixed(2);
-            row.appendChild(imbueCell);
+                const imbueCell = document.createElement('td');
+                imbueCell.textContent = calc.totalAvgImbueDmg.toFixed(2);
+                row.appendChild(imbueCell);
 
-            const unscaledCell = document.createElement('td');
-            unscaledCell.textContent = calc.totalAvgUnscaledDmg.toFixed(2);
-            row.appendChild(unscaledCell);
+                const unscaledCell = document.createElement('td');
+                unscaledCell.textContent = calc.totalAvgUnscaledDmg.toFixed(2);
+                row.appendChild(unscaledCell);
+            } else {
+                // For spell calculators, add empty cells to keep the table structure
+                for (let i = 0; i < 4; i++) {
+                    const emptyCell = document.createElement('td');
+                    emptyCell.textContent = '-';
+                    row.appendChild(emptyCell);
+                }
+            }
 
             this.comparisonTbody.appendChild(row);
         });
@@ -1209,6 +1283,7 @@ class CalculatorManager {
                 const state = calc.getState();
                 state.tabName = calc.getTabName();
                 state.setId = calc.setId;
+                state.type = calc instanceof SpellCalculator ? 'spell' : 'weapon';
                 stateToSave.push(state);
             }
         });
@@ -1229,47 +1304,60 @@ class CalculatorManager {
             summary += `  Set: ${calc.getTabName()}\n`;
             summary += `========================================\n\n`;
 
-            summary += `--- Base Damage ---\n`;
-            summary += `Weapon Dice [W]: ${state['weapon-dice'] || 0}\n`;
-            summary += `Damage: ${state['weapon-damage'] || '0'} + ${state['bonus-base-damage'] || 0}\n\n`;
+            if (calc instanceof Calculator) {
+                summary += `--- Base Damage ---\n`;
+                summary += `Weapon Dice [W]: ${state['weapon-dice'] || 0}\n`;
+                summary += `Damage: ${state['weapon-damage'] || '0'} + ${state['bonus-base-damage'] || 0}\n\n`;
 
-            summary += `--- Critical Profile ---\n`;
-            summary += `Threat Range: ${state['crit-threat'] || '20'}\n`;
-            summary += `Multiplier: x${state['crit-multiplier'] || 2}\n`;
-            summary += `Seeker: +${state['seeker-damage'] || 0}\n`;
-            summary += `19-20 Multiplier: +${state['crit-multiplier-19-20'] || 0}\n\n`;
+                summary += `--- Critical Profile ---\n`;
+                summary += `Threat Range: ${state['crit-threat'] || '20'}\n`;
+                summary += `Multiplier: x${state['crit-multiplier'] || 2}\n`;
+                summary += `Seeker: +${state['seeker-damage'] || 0}\n`;
+                summary += `19-20 Multiplier: +${state['crit-multiplier-19-20'] || 0}\n\n`;
 
-            summary += `--- Hit/Miss Profile ---\n`;
-            summary += `Miss on Roll <=: ${state['miss-threshold'] || 1}\n`;
-            summary += `Graze on Roll <=: ${state['graze-threshold'] || 0}\n`;
-            summary += `Graze Damage: ${state['graze-percent'] || 0}%\n\n`;
+                summary += `--- Hit/Miss Profile ---\n`;
+                summary += `Miss on Roll <=: ${state['miss-threshold'] || 1}\n`;
+                summary += `Graze on Roll <=: ${state['graze-threshold'] || 0}\n`;
+                summary += `Graze Damage: ${state['graze-percent'] || 0}%\n\n`;
 
-            summary += `--- Unscaled Damage ---\n`;
-            let i = 1;
-            while (state.hasOwnProperty(`unscaled-damage-${i}`)) {
-                const damage = state[`unscaled-damage-${i}`] || '0';
-                if (damage && damage !== '0') {
-                    const proc = state[`unscaled-proc-chance-${i}`] || 100;
-                    const multi = state[`unscaled-doublestrike-${i}`] ? 'Yes' : 'No';                            
-                    const onCrit = state[`unscaled-on-crit-${i}`] ? ', On Crit Only' : '';
-                    summary += `Source ${i}: ${damage} @ ${proc}% Proc, Multi-Strike: ${multi}${onCrit}\n`;
+                summary += `--- Unscaled Damage ---\n`;
+                let i = 1;
+                while (state.hasOwnProperty(`unscaled-damage-${i}`)) {
+                    const damage = state[`unscaled-damage-${i}`] || '0';
+                    if (damage && damage !== '0') {
+                        const proc = state[`unscaled-proc-chance-${i}`] || 100;
+                        const multi = state[`unscaled-doublestrike-${i}`] ? 'Yes' : 'No';                            
+                        const onCrit = state[`unscaled-on-crit-${i}`] ? ', On Crit Only' : '';
+                        summary += `Source ${i}: ${damage} @ ${proc}% Proc, Multi-Strike: ${multi}${onCrit}\n`;
+                    }
+                    i++;
                 }
-                i++;
+                summary += `Melee/Ranged Power: ${state['melee-power'] || 0}\n`;
+                summary += `Spell Power: ${state['spell-power'] || 0}\n`;
+                summary += `Multi-Strike: ${state['doublestrike'] || 0}% (${state['is-doubleshot'] ? 'Doubleshot' : 'Doublestrike'})\n\n`;
+
+                summary += `--- Sneak Attack ---\n`;
+                summary += `Damage: ${state['sneak-attack-dice'] || 0}d6 + ${state['sneak-bonus'] || 0}\n\n`;
+
+                summary += `--- Imbue Dice ---\n`;
+                summary += `Dice: ${state['imbue-dice-count'] || 0}d${state['imbue-die-type'] || 6}\n`;
+                summary += `Scaling: ${state['imbue-scaling'] || 100}% of ${state['imbue-uses-spellpower'] ? 'Spell Power' : 'Melee Power'}\n\n`;
+
+                summary += `--- AVERAGES ---\n`;
+                summary += `Total Avg Damage: ${calc.totalAverageDamage.toFixed(2)}\n`;
+                summary += `Avg Base: ${calc.totalAvgBaseHitDmg.toFixed(2)}, Avg Sneak: ${calc.totalAvgSneakDmg.toFixed(2)}, Avg Imbue: ${calc.totalAvgImbueDmg.toFixed(2)}, Avg Unscaled: ${calc.totalAvgUnscaledDmg.toFixed(2)}\n\n\n`;
+            } else if (calc instanceof SpellCalculator) {
+                summary += `--- Spell Properties ---\n`;
+                summary += `Base Damage: ${state['spell-damage'] || '0'}\n`;
+                summary += `Caster Level: ${state['caster-level'] || 0}\n`;
+                summary += `Spell Power: ${state['spell-power'] || 0}\n`;
+                summary += `Crit Chance: ${state['spell-crit-chance'] || 0}%\n`;
+                summary += `Crit Damage: ${state['spell-crit-damage'] || 0}%\n`;
+                summary += `Target MRR: ${state['target-mrr'] || 0}\n\n`;
+                
+                summary += `--- AVERAGES ---\n`;
+                summary += `Total Avg Damage: ${calc.totalAverageDamage.toFixed(2)}\n\n\n`;
             }
-            summary += `Melee/Ranged Power: ${state['melee-power'] || 0}\n`;
-            summary += `Spell Power: ${state['spell-power'] || 0}\n`;
-            summary += `Multi-Strike: ${state['doublestrike'] || 0}% (${state['is-doubleshot'] ? 'Doubleshot' : 'Doublestrike'})\n\n`;
-
-            summary += `--- Sneak Attack ---\n`;
-            summary += `Damage: ${state['sneak-attack-dice'] || 0}d6 + ${state['sneak-bonus'] || 0}\n\n`;
-
-            summary += `--- Imbue Dice ---\n`;
-            summary += `Dice: ${state['imbue-dice-count'] || 0}d${state['imbue-die-type'] || 6}\n`;
-            summary += `Scaling: ${state['imbue-scaling'] || 100}% of ${state['imbue-uses-spellpower'] ? 'Spell Power' : 'Melee Power'}\n\n`;
-
-            summary += `--- AVERAGES ---\n`;
-            summary += `Total Avg Damage: ${calc.totalAverageDamage.toFixed(2)}\n`;
-            summary += `Avg Base: ${calc.totalAvgBaseHitDmg.toFixed(2)}, Avg Sneak: ${calc.totalAvgSneakDmg.toFixed(2)}, Avg Imbue: ${calc.totalAvgImbueDmg.toFixed(2)}, Avg Unscaled: ${calc.totalAvgUnscaledDmg.toFixed(2)}\n\n\n`;
         });
 
         return summary;
@@ -1342,6 +1430,7 @@ class CalculatorManager {
             const state = calc.getState();
             state.tabName = calc.getTabName(); // Save the tab name
             state.setId = calc.setId; // Save the ID
+            state.type = calc instanceof SpellCalculator ? 'spell' : 'weapon';
             stateToSave.push(state);
         })
         sessionStorage.setItem('calculatorState', JSON.stringify(stateToSave));
@@ -1380,15 +1469,17 @@ class CalculatorManager {
         nextSetId = 1; // Reset counter
 
         savedStates.forEach((state) => {
-            // The `loadSetsFromJSON` function will now create a new set, and then `setState` will
-            // dynamically add the required number of unscaled rows before populating their values.
-            // This is a more robust approach.
-            
-            this.addNewSet(state.setId); // Create the set with its correct ID
+            if (state.type === 'spell') {
+                this.addNewSpellSet(state.setId);
+            } else {
+                this.addNewSet(state.setId);
+            }
             const newCalc = this.calculators.get(state.setId);
-            newCalc?.setState(state); // Set state first
-            newCalc?.setTabName(state.tabName); // Then set the name
-            newCalc?.updateSummaryHeader();
+            newCalc?.setState(state);
+            newCalc?.setTabName(state.tabName);
+            if (newCalc instanceof Calculator) {
+                newCalc.updateSummaryHeader();
+            }
         });
 
         this.switchToSet(savedStates[0].setId); // Activate the first set from the saved state
