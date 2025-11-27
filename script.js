@@ -1350,7 +1350,14 @@ class CalculatorManager {
                 summary += `--- Spell Properties ---\n`;
                 if (state.spellDamageSources && state.spellDamageSources.length > 0) {
                     state.spellDamageSources.forEach((source, index) => {
-                        summary += `  Source ${index + 1}: Base Damage: ${source.base || '0'}, CL Scaled: ${source.clScaled || '0'}\n`;
+                        summary += `  Spell ${index + 1} (${source.name || 'Unnamed'}):\n`;
+                        summary += `    Base Damage: ${source.base || '0'}\n`;
+                        summary += `    CL Scaled: ${source.clScaled || '0'}\n`;
+                        // Also include calculated avg hit and avg crit for this spell if available from the calculator instance
+                        if (calc.individualSpellDamages && calc.individualSpellDamages[index]) {
+                            summary += `    Avg Hit (pre-crit): ${calc.individualSpellDamages[index].averageHit.toFixed(2)}\n`;
+                            summary += `    Avg Crit: ${calc.individualSpellDamages[index].averageCrit.toFixed(2)}\n`;
+                        }
                     });
                 }
                 summary += `Caster Level: ${state['caster-level'] || 0}\n`;

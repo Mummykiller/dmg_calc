@@ -255,7 +255,9 @@
                     <div id="spell-damage-rows-container">
                         <!-- Default spell damage row -->
                         <div class="input-group-row">
-                            <label for="spell-damage-1">Base Damage 1</label>
+                            <label for="spell-name-1">Spell Name 1</label>
+                            <input type="text" id="spell-name-1" value="Spell 1" title="Name of the spell">
+                            <label for="spell-damage-1">Base Dmg</label>
                             <input type="text" id="spell-damage-1" value="10d6" title="The spell's base damage dice (e.g., 10d6+50)">
                             <label for="spell-cl-scaling-1" class="short-label">CL Scale</label>
                             <input type="text" id="spell-cl-scaling-1" value="0" class="small-input" title="Bonus damage dice per caster level (e.g., 1d6 per CL)">
@@ -309,6 +311,11 @@
                         <p><strong>Average Base Hit:</strong> <span id="avg-spell-damage">0</span></p>
                         <p><strong>Average Critical Hit:</strong> <span id="avg-spell-crit-damage">0</span></p>
                         <p class="total-damage-summary"><strong>Total Average Damage (pre-MRR):</strong> <span id="total-avg-spell-damage">0</span></p>
+                        <hr>
+                        <div id="individual-spell-damage-summary">
+                            <h3>Individual Spell Damage</h3>
+                            <!-- Individual spell damages will be inserted here -->
+                        </div>
                         <hr>
                         <p><strong>Damage Mitigated by MRR:</strong> <span id="mrr-mitigation">0</span></p>
                         <p class="total-damage-summary"><strong>Final Average Damage:</strong> <span id="final-spell-damage">0</span></p>
