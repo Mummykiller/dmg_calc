@@ -252,10 +252,17 @@
             <div class="input-column">
                 <div class="stats-group">
                     <label class="section-headline">Spell Properties</label>
-                    <div class="input-group-row">
-                        <label for="spell-damage">Base Damage</label>
-                        <input type="text" id="spell-damage" value="10d6" title="The spell's base damage dice (e.g., 10d6+50)">
+                    <div id="spell-damage-rows-container">
+                        <!-- Default spell damage row -->
+                        <div class="input-group-row">
+                            <label for="spell-damage-1">Base Damage 1</label>
+                            <input type="text" id="spell-damage-1" value="10d6" title="The spell's base damage dice (e.g., 10d6+50)">
+                            <label for="spell-cl-scaling-1" class="short-label">CL Scale</label>
+                            <input type="text" id="spell-cl-scaling-1" value="0" class="small-input" title="Bonus damage dice per caster level (e.g., 1d6 per CL)">
+                            <button class="remove-row-btn" title="Remove this damage source">&times;</button>
+                        </div>
                     </div>
+                    <button id="add-spell-damage-row-btn" class="small-btn" style="width: auto; margin-top: 0.5rem;">Add Spell Damage Source</button>
                     <div class="input-group-row">
                         <label for="caster-level">Caster Level</label>
                         <input type="number" id="caster-level" value="20" class="small-input" title="Your character's caster level for this spell.">

@@ -1348,7 +1348,11 @@ class CalculatorManager {
                 summary += `Avg Base: ${calc.totalAvgBaseHitDmg.toFixed(2)}, Avg Sneak: ${calc.totalAvgSneakDmg.toFixed(2)}, Avg Imbue: ${calc.totalAvgImbueDmg.toFixed(2)}, Avg Unscaled: ${calc.totalAvgUnscaledDmg.toFixed(2)}\n\n\n`;
             } else if (calc instanceof SpellCalculator) {
                 summary += `--- Spell Properties ---\n`;
-                summary += `Base Damage: ${state['spell-damage'] || '0'}\n`;
+                if (state.spellDamageSources && state.spellDamageSources.length > 0) {
+                    state.spellDamageSources.forEach((source, index) => {
+                        summary += `  Source ${index + 1}: Base Damage: ${source.base || '0'}, CL Scaled: ${source.clScaled || '0'}\n`;
+                    });
+                }
                 summary += `Caster Level: ${state['caster-level'] || 0}\n`;
                 summary += `Spell Power: ${state['spell-power'] || 0}\n`;
                 summary += `Crit Chance: ${state['spell-crit-chance'] || 0}%\n`;
