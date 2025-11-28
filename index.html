@@ -1,11 +1,13 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>DDO Damage Calculator</title>
     <link rel="stylesheet" href="style.css">
 </head>
+
 <body>
 
     <div class="page-wrapper">
@@ -22,8 +24,8 @@
         <p class="subtitle">Enter your combat stats to calculate and compare average damage per hit.</p>
 
         <nav class="set-navigation">
-            <button id="add-set-btn" title="Add a new weapon set for comparison">+</button>
-            <button id="add-spell-set-btn" title="Add a new spell set for comparison">🔮</button>
+            <button id="add-weapon-set-btn" class="nav-action-btn" title="Add a new weapon set for comparison">+</button>
+            <button id="add-spell-set-btn" class="nav-action-btn" title="Add a new spell set for comparison">🔮</button>
             <button id="import-btn" class="nav-action-btn" title="Import sets from text or file">Import</button>
             <button id="export-btn" class="nav-action-btn" title="Export sets to text or file">Export</button>
         </nav>
@@ -59,8 +61,10 @@
             <p id="modal-description">Copy the text below or save it to a file.</p>
             <div class="modal-format-toggle">
                 <label>Format:</label>
-                <button id="format-json-btn" class="toggle-btn active" title="Machine-readable format for re-importing">JSON</button>
-                <button id="format-summary-btn" class="toggle-btn" title="Human-readable summary for sharing">Summary</button>
+                <button id="format-json-btn" class="toggle-btn active"
+                    title="Machine-readable format for re-importing">JSON</button>
+                <button id="format-summary-btn" class="toggle-btn"
+                    title="Human-readable summary for sharing">Summary</button>
             </div>
             <textarea id="modal-textarea" rows="10"></textarea>
             <div class="modal-actions">
@@ -74,7 +78,7 @@
             </div>
         </div>
     </div>
-    
+
     <!-- Template for a single calculator set -->
     <template id="calculator-set-template">
         <div class="main-grid">
@@ -87,32 +91,40 @@
                     <div class="example-text">e.g., 1d6+3</div>
                     <div class="input-group-row">
                         <label for="weapon-damage">Damage</label>
-                        <input type="text" id="weapon-damage" value="1d10+3" title="Weapon's base damage dice + enhancement bonus">
+                        <input type="text" id="weapon-damage" value="1d10+3"
+                            title="Weapon's base damage dice + enhancement bonus">
                         <span class="plus-symbol">+</span>
-                        <input type="number" id="bonus-base-damage" value="125" class="small-input" title="Bonus damage that IS multiplied on a critical hit">
+                        <input type="number" id="bonus-base-damage" value="125" class="small-input"
+                            title="Bonus damage that IS multiplied on a critical hit">
                     </div>
                 </div>
                 <div class="stats-group">
                     <div class="input-group-row">
                         <label for="crit-threat">Critical</label>
-                        <input type="text" id="crit-threat" value="15-20" class="small-input" title="Enter threat range size (e.g., 6) or the roll numbers (e.g., 15-20)">
+                        <input type="text" id="crit-threat" value="15-20" class="small-input"
+                            title="Enter threat range size (e.g., 6) or the roll numbers (e.g., 15-20)">
                         <span class="divider-symbol">/</span>
-                        <input type="number" id="crit-multiplier" value="4" step="0.5" class="small-input" title="Critical Multiplier (e.g., x4)">
+                        <input type="number" id="crit-multiplier" value="4" step="0.5" class="small-input"
+                            title="Critical Multiplier (e.g., x4)">
                     </div>
                     <div class="input-group-row">
                         <label for="seeker-damage">Seeker</label>
-                        <input type="number" id="seeker-damage" value="0" class="small-input" title="Bonus damage on critical hits that gets multiplied (e.g., from Seeker items)">
+                        <input type="number" id="seeker-damage" value="0" class="small-input"
+                            title="Bonus damage on critical hits that gets multiplied (e.g., from Seeker items)">
                     </div>
                     <div class="input-group-row">
                         <label for="crit-multiplier-19-20">19-20 Multiplier</label>
-                        <input type="number" id="crit-multiplier-19-20" value="2" step="0.5" class="small-input" title="Additional critical multiplier on a roll of 19 or 20 (e.g., a value of 1 here with a base x4 multiplier results in a x5 on a 19-20).">
+                        <input type="number" id="crit-multiplier-19-20" value="2" step="0.5" class="small-input"
+                            title="Additional critical multiplier on a roll of 19 or 20 (e.g., a value of 1 here with a base x4 multiplier results in a x5 on a 19-20).">
                     </div>
                 </div>
                 <div class="stats-group">
                     <div class="input-group-row">
                         <label for="miss-threshold">Miss on Roll ≤</label>
-                        <input type="number" id="miss-threshold" value="1" min="1" max="20" class="small-input" title="Rolls at or below this value are a miss. (1 is always a miss).">
-                        <label for="graze-threshold" title="Rolls at or below this value (but above miss) are a graze.">Graze on Roll ≤</label>
+                        <input type="number" id="miss-threshold" value="1" min="1" max="20" class="small-input"
+                            title="Rolls at or below this value are a miss. (1 is always a miss).">
+                        <label for="graze-threshold"
+                            title="Rolls at or below this value (but above miss) are a graze.">Graze on Roll ≤</label>
                         <input type="number" id="graze-threshold" value="5" min="1" max="20" class="small-input">
                     </div>
                     <label for="graze-percent">Graze Damage %</label>
@@ -120,45 +132,70 @@
                 </div>
                 <div class="stats-group">
                     <div id="unscaled-rows-container">
-                            <label>Unscaled Damage Sources (e.g., 16d6 acid)</label>
+                        <label>Unscaled Damage Sources (e.g., 16d6 acid)</label>
                         <!-- Default unscaled rows -->
                         <div class="input-group-row">
                             <label for="unscaled-damage-1">Unscaled Damage 1</label>
-                            <input type="text" id="unscaled-damage-1" value="0" title="Additional source of unscaled damage">
+                            <input type="text" id="unscaled-damage-1" value="0"
+                                title="Additional source of unscaled damage">
                             <label for="unscaled-proc-chance-1" class="short-label">Proc %</label>
-                            <input type="number" id="unscaled-proc-chance-1" value="100" min="0" max="100" class="small-input" title="Chance for this damage to occur on a hit">
-                            <input type="checkbox" id="unscaled-doublestrike-1" checked><label for="unscaled-doublestrike-1" class="inline-checkbox-label" title="Should this damage scale with Doublestrike/Doubleshot?">Multi-Strike</label>
-                            <input type="checkbox" id="unscaled-on-crit-1"><label for="unscaled-on-crit-1" class="inline-checkbox-label" title="Should this damage only apply on a critical hit?">On Crit</label>
+                            <input type="number" id="unscaled-proc-chance-1" value="100" min="0" max="100"
+                                class="small-input" title="Chance for this damage to occur on a hit">
+                            <input type="checkbox" id="unscaled-doublestrike-1" checked><label
+                                for="unscaled-doublestrike-1" class="inline-checkbox-label"
+                                title="Should this damage scale with Doublestrike/Doubleshot?">Multi-Strike</label>
+                            <input type="checkbox" id="unscaled-on-crit-1"><label for="unscaled-on-crit-1"
+                                class="inline-checkbox-label"
+                                title="Should this damage only apply on a critical hit?">On Crit</label>
                             <button class="remove-row-btn" title="Remove this damage source">&times;</button>
                         </div>
                         <div class="input-group-row">
                             <label for="unscaled-damage-2">Unscaled Damage 2</label>
-                            <input type="text" id="unscaled-damage-2" value="0" title="Additional source of unscaled damage">
+                            <input type="text" id="unscaled-damage-2" value="0"
+                                title="Additional source of unscaled damage">
                             <label for="unscaled-proc-chance-2" class="short-label">Proc %</label>
-                            <input type="number" id="unscaled-proc-chance-2" value="100" min="0" max="100" class="small-input" title="Chance for this damage to occur on a hit">
-                            <input type="checkbox" id="unscaled-doublestrike-2" checked><label for="unscaled-doublestrike-2" class="inline-checkbox-label" title="Should this damage scale with Doublestrike/Doubleshot?">Multi-Strike</label>
-                            <input type="checkbox" id="unscaled-on-crit-2"><label for="unscaled-on-crit-2" class="inline-checkbox-label" title="Should this damage only apply on a critical hit?">On Crit</label>
+                            <input type="number" id="unscaled-proc-chance-2" value="100" min="0" max="100"
+                                class="small-input" title="Chance for this damage to occur on a hit">
+                            <input type="checkbox" id="unscaled-doublestrike-2" checked><label
+                                for="unscaled-doublestrike-2" class="inline-checkbox-label"
+                                title="Should this damage scale with Doublestrike/Doubleshot?">Multi-Strike</label>
+                            <input type="checkbox" id="unscaled-on-crit-2"><label for="unscaled-on-crit-2"
+                                class="inline-checkbox-label"
+                                title="Should this damage only apply on a critical hit?">On Crit</label>
                             <button class="remove-row-btn" title="Remove this damage source">&times;</button>
                         </div>
                         <div class="input-group-row">
                             <label for="unscaled-damage-3">Unscaled Damage 3</label>
-                            <input type="text" id="unscaled-damage-3" value="0" title="Additional source of unscaled damage">
+                            <input type="text" id="unscaled-damage-3" value="0"
+                                title="Additional source of unscaled damage">
                             <label for="unscaled-proc-chance-3" class="short-label">Proc %</label>
-                            <input type="number" id="unscaled-proc-chance-3" value="100" min="0" max="100" class="small-input" title="Chance for this damage to occur on a hit">
-                            <input type="checkbox" id="unscaled-doublestrike-3" checked><label for="unscaled-doublestrike-3" class="inline-checkbox-label" title="Should this damage scale with Doublestrike/Doubleshot?">Multi-Strike</label>
-                            <input type="checkbox" id="unscaled-on-crit-3"><label for="unscaled-on-crit-3" class="inline-checkbox-label" title="Should this damage only apply on a critical hit?">On Crit</label>
+                            <input type="number" id="unscaled-proc-chance-3" value="100" min="0" max="100"
+                                class="small-input" title="Chance for this damage to occur on a hit">
+                            <input type="checkbox" id="unscaled-doublestrike-3" checked><label
+                                for="unscaled-doublestrike-3" class="inline-checkbox-label"
+                                title="Should this damage scale with Doublestrike/Doubleshot?">Multi-Strike</label>
+                            <input type="checkbox" id="unscaled-on-crit-3"><label for="unscaled-on-crit-3"
+                                class="inline-checkbox-label"
+                                title="Should this damage only apply on a critical hit?">On Crit</label>
                             <button class="remove-row-btn" title="Remove this damage source">&times;</button>
                         </div>
                     </div>
-                    <button id="add-unscaled-row-btn" class="small-btn" style="width: auto; margin-top: 0.5rem;">Add Unscaled Damage</button>
+                    <button id="add-unscaled-row-btn" class="small-btn" style="width: auto; margin-top: 0.5rem;">Add
+                        Unscaled Damage</button>
                 </div>
                 <div class="stats-group">
-                    <div class="input-group-row"><label for="doublestrike">Multi-Strike (%)</label><input type="number" id="doublestrike" value="0" min="0" class="small-input"><input type="checkbox" id="is-doubleshot"><label for="is-doubleshot" class="checkbox-label">Is Doubleshot</label></div>
-                    <div class="input-group-row"><label for="melee-power">Melee/Ranged Power</label><input type="number" id="melee-power" value="0" min="0" class="small-input"></div>
-                    <div class="input-group-row"><label for="spell-power">Spell Power</label><input type="number" id="spell-power" value="0" min="0" class="small-input"></div>
+                    <div class="input-group-row"><label for="doublestrike">Multi-Strike (%)</label><input type="number"
+                            id="doublestrike" value="0" min="0" class="small-input"><input type="checkbox"
+                            id="is-doubleshot"><label for="is-doubleshot" class="checkbox-label">Is Doubleshot</label>
+                    </div>
+                    <div class="input-group-row"><label for="melee-power">Melee/Ranged Power</label><input type="number"
+                            id="melee-power" value="0" min="0" class="small-input"></div>
+                    <div class="input-group-row"><label for="spell-power">Spell Power</label><input type="number"
+                            id="spell-power" value="0" min="0" class="small-input"></div>
                     <div class="input-group-row">
                         <label for="reaper-skulls">Reaper Skulls</label>
-                        <select id="reaper-skulls" class="small-input" title="Number of Reaper skulls for difficulty scaling.">
+                        <select id="reaper-skulls" class="small-input"
+                            title="Number of Reaper skulls for difficulty scaling.">
                             <option value="0">None</option>
                             <option value="1">1</option>
                             <option value="2">2</option>
@@ -177,25 +214,33 @@
                     <label class="section-headline">Sneak Attack & Deception</label>
                     <div class="input-group-row">
                         <label for="sneak-attack-dice">Sneak Attack</label>
-                        <input type="number" id="sneak-attack-dice" value="0" class="small-input" title="Number of Sneak Attack d6 dice">
+                        <input type="number" id="sneak-attack-dice" value="0" class="small-input"
+                            title="Number of Sneak Attack d6 dice">
                         <span class="dice-separator">d6</span><span class="plus-symbol">+</span>
-                        <input type="number" id="sneak-bonus" value="0" class="small-input" title="Flat bonus to Sneak Attack damage">
+                        <input type="number" id="sneak-bonus" value="0" class="small-input"
+                            title="Flat bonus to Sneak Attack damage">
                     </div>
                 </div>
                 <div class="stats-group">
                     <div class="input-group-row">
                         <label for="imbue-dice-count">Imbue Dice</label>
-                        <input type="number" id="imbue-dice-count" value="0" class="small-input" title="Number of imbue dice">
+                        <input type="number" id="imbue-dice-count" value="0" class="small-input"
+                            title="Number of imbue dice">
                         <span class="dice-separator">d</span>
-                        <input type="number" id="imbue-die-type" value="6" class="small-input" title="Type of imbue dice (e.g., 6 for d6, 8 for d8)">
+                        <input type="number" id="imbue-die-type" value="6" class="small-input"
+                            title="Type of imbue dice (e.g., 6 for d6, 8 for d8)">
                     </div>
                     <div class="input-group-row">
                         <label for="imbue-scaling">Scaling %</label>
-                        <input type="number" id="imbue-scaling" value="100" class="small-input" title="Percentage of Melee/Spell Power to apply to imbue damage">
-                        <input type="checkbox" id="imbue-uses-spellpower"><label for="imbue-uses-spellpower" class="checkbox-label">Use Spell Power</label>
+                        <input type="number" id="imbue-scaling" value="100" class="small-input"
+                            title="Percentage of Melee/Spell Power to apply to imbue damage">
+                        <input type="checkbox" id="imbue-uses-spellpower"><label for="imbue-uses-spellpower"
+                            class="checkbox-label">Use Spell Power</label>
                     </div>
                     <div class="input-group-row">
-                        <label for="imbue-crits" class="checkbox-label" title="If checked, the base imbue damage is applied an additional time on a critical hit (e.g., Monk finishers).">Imbue crits for extra damage</label>
+                        <label for="imbue-crits" class="checkbox-label"
+                            title="If checked, the base imbue damage is applied an additional time on a critical hit (e.g., Monk finishers).">Imbue
+                            crits for extra damage</label>
                         <input type="checkbox" id="imbue-crits">
                     </div>
                     <div class="input-group-row">
@@ -215,7 +260,8 @@
                         <p><strong>Total Avg Sneak Attack:</strong> <span id="avg-sneak-damage">0</span></p>
                         <p><strong>Total Avg Imbue:</strong> <span id="avg-imbue-damage">0</span></p>
                         <p><strong>Total Avg Unscaled:</strong> <span id="avg-unscaled-damage">0</span></p>
-                        <p class="total-damage-summary"><strong>Total Average Damage:</strong> <span id="total-avg-damage">0</span></p>
+                        <p class="total-damage-summary"><strong>Total Average Damage:</strong> <span
+                                id="total-avg-damage">0</span></p>
                     </div>
                     <div class="scaling-breakdown">
                         <h2>Scaling Breakdown</h2>
@@ -239,7 +285,9 @@
                                     <th>Sum</th>
                                     <th>Outcome</th>
                                 </tr>
-                            </thead><tbody id="roll-damage-tbody"></tbody></table>
+                            </thead>
+                            <tbody id="roll-damage-tbody"></tbody>
+                        </table>
                     </div>
                 </div>
             </div>
@@ -255,49 +303,61 @@
                     <div id="spell-damage-rows-container">
                         <!-- Default spell damage row -->
                         <div class="input-group-row">
-                            <input type="text" id="spell-name-1" value="Spell 1" title="Name of the spell component" placeholder="Spell Name">
+                            <input type="text" id="spell-name-1" value="Spell 1" title="Name of the spell component"
+                                placeholder="Spell Name">
                             <label for="spell-damage-1">Base Damage</label>
-                            <input type="text" id="spell-damage-1" value="10d6" title="The spell's base damage (e.g., 10d6+50)">
+                            <input type="text" id="spell-damage-1" value="10d6"
+                                title="The spell's base damage (e.g., 10d6+50)">
                             <span class="plus-symbol">+</span>
                             <label for="spell-cl-scaling-1" class="short-label">per CL</label>
-                            <input type="text" id="spell-cl-scaling-1" value="1d6" class="small-input" title="Bonus damage dice per caster level (e.g., 1d6 per CL)">
+                            <input type="text" id="spell-cl-scaling-1" value="1d6" class="small-input"
+                                title="Bonus damage dice per caster level (e.g., 1d6 per CL)">
                             <label for="caster-level-1" class="short-label">CL</label>
-                            <input type="number" id="caster-level-1" value="20" class="small-input" title="Caster Level for this damage component">
+                            <input type="number" id="caster-level-1" value="20" class="small-input"
+                                title="Caster Level for this damage component">
                             <button class="remove-row-btn" title="Remove this damage source">&times;</button>
                         </div>
                     </div>
-                    <button id="add-spell-damage-row-btn" class="small-btn" style="width: auto; margin-top: 0.5rem;">Add Spell Damage Source</button>
+                    <button id="add-spell-damage-row-btn" class="small-btn" style="width: auto; margin-top: 0.5rem;">Add
+                        Spell Damage Source</button>
                 </div>
                 <div class="stats-group">
                     <label class="section-headline">Spell Power & Criticals</label>
                     <div class="input-group-row">
                         <label for="spell-power">Spell Power</label>
-                        <input type="number" id="spell-power" value="500" class="small-input" title="Your spell power for the spell's damage type.">
+                        <input type="number" id="spell-power" value="500" class="small-input"
+                            title="Your spell power for the spell's damage type.">
                         <span class="plus-symbol">+</span>
                         <span id="metamagic-spell-power-bonus" class="read-only-bonus">0</span>
                     </div>
                     <div class="input-group-row">
                         <label for="spell-crit-chance">Crit Chance %</label>
-                        <input type="number" id="spell-crit-chance" value="20" class="small-input" title="Your chance to critically hit with the spell.">
+                        <input type="number" id="spell-crit-chance" value="20" class="small-input"
+                            title="Your chance to critically hit with the spell.">
                     </div>
                     <div class="input-group-row">
                         <label for="spell-crit-damage">Crit Damage %</label>
-                        <input type="number" id="spell-crit-damage" value="100" class="small-input" title="Your additional spell critical damage (e.g., 100 for a total of x3 multiplier).">
+                        <input type="number" id="spell-crit-damage" value="100" class="small-input"
+                            title="Your additional spell critical damage (e.g., 100 for a total of x3 multiplier).">
                     </div>
                 </div>
                 <div class="stats-group">
                     <label class="section-headline">Target Defenses</label>
                     <div class="input-group-row">
                         <label for="target-mrr">Target MRR</label>
-                        <input type="number" id="target-mrr" value="50" class="small-input" title="The target's Magical Resistance Rating.">
+                        <input type="number" id="target-mrr" value="50" class="small-input"
+                            title="The target's Magical Resistance Rating.">
                     </div>
                 </div>
                 <div class="stats-group">
                     <label class="section-headline">Metamagic</label>
                     <div class="input-group-row">
-                        <input type="checkbox" id="metamagic-empower"><label for="metamagic-empower" class="checkbox-label">Empower</label>
-                        <input type="checkbox" id="metamagic-maximize"><label for="metamagic-maximize" class="checkbox-label">Maximize</label>
-                        <input type="checkbox" id="metamagic-intensify"><label for="metamagic-intensify" class="checkbox-label">Intensify</label>
+                        <input type="checkbox" id="metamagic-empower"><label for="metamagic-empower"
+                            class="checkbox-label">Empower</label>
+                        <input type="checkbox" id="metamagic-maximize"><label for="metamagic-maximize"
+                            class="checkbox-label">Maximize</label>
+                        <input type="checkbox" id="metamagic-intensify"><label for="metamagic-intensify"
+                            class="checkbox-label">Intensify</label>
                     </div>
                 </div>
                 <button id="calculate-spell-btn">Calculate Spell Damage</button>
@@ -308,7 +368,8 @@
                         <h2 id="spell-summary-header">Spell Damage Summary</h2>
                         <p><strong>Average Base Hit:</strong> <span id="avg-spell-damage">0</span></p>
                         <p><strong>Average Critical Hit:</strong> <span id="avg-spell-crit-damage">0</span></p>
-                        <p class="total-damage-summary"><strong>Total Average Damage (pre-MRR):</strong> <span id="total-avg-spell-damage">0</span></p>
+                        <p class="total-damage-summary"><strong>Total Average Damage (pre-MRR):</strong> <span
+                                id="total-avg-spell-damage">0</span></p>
                         <hr>
                         <div id="individual-spell-damage-summary">
                             <h3>Individual Spell Damage</h3>
@@ -316,7 +377,8 @@
                         </div>
                         <hr>
                         <p><strong>Damage Mitigated by MRR:</strong> <span id="mrr-mitigation">0</span></p>
-                        <p class="total-damage-summary"><strong>Final Average Damage:</strong> <span id="final-spell-damage">0</span></p>
+                        <p class="total-damage-summary"><strong>Final Average Damage:</strong> <span
+                                id="final-spell-damage">0</span></p>
                     </div>
                 </div>
             </div>
@@ -327,4 +389,5 @@
     <script src="SpellCalculator.js"></script>
     <script src="script.js"></script>
 </body>
+
 </html>

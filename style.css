@@ -60,7 +60,9 @@ body {
 
 .set-navigation {
     display: flex;
-    margin-bottom: -1px; /* Overlap the container's border */
+    gap: 0.5rem; /* Add consistent spacing between elements */
+    margin-bottom: -1px;
+    /* Overlap the container's border */
     position: relative;
     z-index: 1;
 }
@@ -70,15 +72,18 @@ body {
     border: 1px solid var(--border-color);
     border-bottom: none;
     padding: 0.75rem 1.5rem;
-    padding-top: calc(0.75rem - 3px); /* Adjust for border */
+    padding-top: calc(0.75rem - 3px);
+    /* Adjust for border */
     cursor: pointer;
     font-size: 1rem;
     color: var(--label-color);
     border-radius: 8px 8px 0 0;
     margin-right: 0.5rem;
-    border-top: 3px solid transparent; /* Placeholder for active indicator */
+    border-top: 3px solid transparent;
+    /* Placeholder for active indicator */
     transition: border-color 0.2s, color 0.2s, background-color 0.2s;
-    position: relative; /* Needed for absolute positioning of the close button */
+    position: relative;
+    /* Needed for absolute positioning of the close button */
 }
 
 .nav-tab:not(.active):hover {
@@ -88,40 +93,52 @@ body {
 }
 
 .nav-tab.active .tab-name {
+
     color: var(--header-color);
+
 }
 
-#add-set-btn {
-    border: 1px dashed var(--border-color);
-    background-color: transparent;
-    color: var(--label-color);
-    font-size: 1.5rem;
-    font-weight: bold;
-    padding: 0.2rem 1rem;
-    border-radius: 8px;
-    cursor: pointer;
-    transition: border-color 0.2s, color 0.2s;
-}
 
-#add-set-btn:hover {
-    border-color: var(--accent-color);
-}
 
 .nav-action-btn {
+
     background-color: var(--stats-group-bg);
+
     border: 1px solid var(--border-color);
-    padding: 0.75rem 1.5rem;
+
+    width: 40px; /* Fixed width for square shape */
+
+    height: 40px; /* Fixed height for square shape */
+
+    padding: 0; /* Remove padding to allow fixed width/height to control size */
+
     cursor: pointer;
-    font-size: 1rem;
+
+    font-size: 1rem; /* Standard font size for text/emoji */
+
     color: var(--label-color);
-    border-radius: 8px;
-    margin-left: 0.5rem;
+
+    border-radius: 8px; /* Rounded corners */
+
+    display: flex; /* Use flexbox to center content */
+
+    justify-content: center; /* Center horizontally */
+
+    align-items: center; /* Center vertically */
+
+    /* Removed margin-left as gap on parent handles spacing */
+
+    transition: background-color 0.2s, border-color 0.2s, color 0.2s;
+
 }
+
+
 
 .tab-name {
     display: inline-block;
     padding: 0 0.5rem;
-    padding-left: 1.5rem; /* Make space for the close button */
+    padding-left: 1.5rem;
+    /* Make space for the close button */
     min-width: 50px;
     border-radius: 3px;
 }
@@ -154,11 +171,25 @@ body {
     background-color: var(--border-color);
 }
 
+.nav-tab.spell-tab-indicator {
+    background-color: var(--button-bg);
+    color: var(--button-text-color);
+}
+
+.nav-tab.spell-tab-indicator.active {
+    background-color: var(--button-bg);
+    color: var(--button-text-color);
+    border-top-color: var(--button-bg);
+}
+
+/* Original active tab styles for weapon tabs */
 .nav-tab.active {
     background-color: var(--container-bg);
     color: var(--header-color);
-    border-bottom: 1px solid var(--container-bg); /* Make it look connected */
-    border-top-color: var(--accent-color); /* Highlight for active tab */
+    border-bottom: 1px solid var(--container-bg);
+    /* Make it look connected */
+    border-top-color: var(--accent-color);
+    /* Highlight for active tab */
     font-weight: bold;
 }
 
@@ -173,8 +204,10 @@ body {
 }
 
 #add-set-btn.drag-over-end-indicator {
-    border: 1px dashed var(--accent-color); /* Highlight the add button */
-    background-color: rgba(var(--accent-color-rgb), 0.1); /* Subtle background */
+    border: 1px dashed var(--accent-color);
+    /* Highlight the add button */
+    background-color: rgba(var(--accent-color-rgb), 0.1);
+    /* Subtle background */
 }
 
 .nav-tab-placeholder {
@@ -182,7 +215,8 @@ body {
     border: 2px dashed var(--accent-color);
     border-radius: 8px 8px 0 0;
     margin-right: 0.5rem;
-    box-sizing: border-box; /* Ensure border is included in width/height */
+    box-sizing: border-box;
+    /* Ensure border is included in width/height */
 }
 
 .calculator-container {
@@ -201,8 +235,9 @@ body {
 }
 
 h1 {
-    color: var(--header-color);    
-    margin: 0; /* Reset margin for h1 */
+    color: var(--header-color);
+    margin: 0;
+    /* Reset margin for h1 */
 }
 
 .subtitle {
@@ -233,7 +268,8 @@ h1 {
     display: flex;
     align-items: center;
     gap: 0.5rem;
-    flex-wrap: wrap; /* Allow items to wrap onto new lines */
+    flex-wrap: wrap;
+    /* Allow items to wrap onto new lines */
 }
 
 .input-group-row:not(:last-child) {
@@ -241,7 +277,8 @@ h1 {
 }
 
 .input-group-row label {
-    flex-basis: 100px; /* Give labels a fixed width */
+    flex-basis: 100px;
+    /* Give labels a fixed width */
     flex-shrink: 0;
 }
 
@@ -269,13 +306,15 @@ h1 {
     padding: 0.5rem;
     border: 1px solid var(--input-border-color);
     border-radius: 4px;
-    box-sizing: border-box; /* Important for padding and width */
+    box-sizing: border-box;
+    /* Important for padding and width */
     background-color: var(--container-bg);
     color: var(--text-color);
 }
 
 .input-group-row input {
-    padding: 0.4rem; /* Reduced padding for a more compact look */
+    padding: 0.3rem;
+    /* Further reduced padding for a more compact look */
     border: 1px solid var(--input-border-color);
     border-radius: 4px;
     box-sizing: border-box;
@@ -286,20 +325,27 @@ h1 {
 
 /* Make text inputs for dice notation adaptive */
 .input-group-row input[type="text"] {
-    flex-grow: 1; /* Allow text inputs to grow and fill space */
-    min-width: 80px; /* Set a minimum width */
-    width: auto; /* Allow it to shrink if needed */
+    flex-grow: 1;
+    /* Allow text inputs to grow and fill space */
+    min-width: 70px;
+    /* Set a smaller minimum width */
+    width: auto;
+    /* Allow it to shrink if needed */
 }
 
 .small-input {
-    width: 60px; /* Reduced base width for small number inputs */
-    flex-grow: 0 !important; /* Ensure small inputs don't grow */
+    width: 50px;
+    /* Further reduced base width for small number inputs */
+    flex-grow: 0 !important;
+    /* Ensure small inputs don't grow */
     flex-shrink: 0;
 }
 
-.plus-symbol, .divider-symbol {
+.plus-symbol,
+.divider-symbol {
     font-weight: bold;
 }
+
 .dice-separator {
     font-weight: bold;
     color: var(--label-color);
@@ -315,7 +361,8 @@ h1 {
 }
 
 .checkbox-label {
-    flex-basis: auto !important; /* Override the fixed width for checkbox labels in a row */
+    flex-basis: auto !important;
+    /* Override the fixed width for checkbox labels in a row */
 }
 
 .short-label {
@@ -344,18 +391,25 @@ button {
     width: auto;
     padding: 0.4rem 0.6rem;
     font-size: 0.8rem;
-    flex-shrink: 0; /* Prevent the button from shrinking */
+    flex-shrink: 0;
+    /* Prevent the button from shrinking */
     margin: 0;
 }
 
 /* Style for section headlines within a stats-group */
 .section-headline,
-div[id^="unscaled-rows-container"] > label:first-child /* Maintain style for old headline */ {
-    display: block; /* Make it a block element to take up its own line */
+div[id^="unscaled-rows-container"]>label:first-child
+
+/* Maintain style for old headline */
+    {
+    display: block;
+    /* Make it a block element to take up its own line */
     font-weight: bold;
     color: var(--label-color);
-    margin-bottom: 0.6rem; /* Add space below the headline */
-    padding-left: 2px; /* Align it slightly with the labels below it */
+    margin-bottom: 0.6rem;
+    /* Add space below the headline */
+    padding-left: 2px;
+    /* Align it slightly with the labels below it */
 }
 
 button:hover {
@@ -368,7 +422,8 @@ button:hover {
 
 .results p {
     font-size: 1.1rem;
-    margin: 0.5rem 0; /* Reduced bottom margin for tighter spacing */
+    margin: 0.5rem 0;
+    /* Reduced bottom margin for tighter spacing */
 }
 
 .results span {
@@ -381,6 +436,7 @@ button:hover {
     border-top: 2px solid var(--border-color);
     padding-top: 0.75rem;
 }
+
 .total-damage-summary {
     margin-top: 1rem !important;
     padding-top: 0.75rem;
@@ -410,7 +466,8 @@ hr {
 }
 
 .summary-results {
-    flex: 1; /* Allows the summary to take up available space */
+    flex: 1;
+    /* Allows the summary to take up available space */
 }
 
 .roll-results table {
@@ -419,7 +476,8 @@ hr {
     text-align: center;
 }
 
-.roll-results th, .roll-results td {
+.roll-results th,
+.roll-results td {
     padding: 0.4rem;
     border: 1px solid var(--border-color);
 }
@@ -439,12 +497,15 @@ hr {
     background-color: transparent;
     color: var(--accent-color);
     border: 1px solid transparent;
-    margin-left: auto; /* Pushes the button to the far right */
+    margin-left: auto;
+    /* Pushes the button to the far right */
 }
+
 .remove-row-btn:hover {
     background-color: var(--stats-group-bg);
     border-color: var(--border-color);
 }
+
 /* --- Modal Styles --- */
 .modal-backdrop {
     position: fixed;
@@ -542,7 +603,8 @@ hr {
 }
 
 #modal-file-input {
-    display: none; /* Hide the default file input */
+    display: none;
+    /* Hide the default file input */
 }
 
 /* --- Modern Theme Toggle Styles --- */
@@ -577,7 +639,8 @@ hr {
 
 .slider:before {
     position: absolute;
-    content: "☀️"; /* Sun icon */
+    content: "☀️";
+    /* Sun icon */
     height: 26px;
     width: 26px;
     left: 4px;
@@ -589,11 +652,24 @@ hr {
     justify-content: center;
 }
 
-.slider.round { border-radius: 34px; }
-.slider.round:before { border-radius: 50%; }
+.slider.round {
+    border-radius: 34px;
+}
 
-input:checked + .slider { background-color: var(--button-bg); }
-input:checked + .slider:before { transform: translateX(26px); content: "🌙"; } /* Moon icon */
+.slider.round:before {
+    border-radius: 50%;
+}
+
+input:checked+.slider {
+    background-color: var(--button-bg);
+}
+
+input:checked+.slider:before {
+    transform: translateX(26px);
+    content: "🌙";
+}
+
+/* Moon icon */
 
 .best-damage-badge {
     font-weight: bold;
@@ -608,13 +684,15 @@ input:checked + .slider:before { transform: translateX(26px); content: "🌙"; }
 }
 
 .roll-results .crit-row {
-    background-color: var(--crit-row-bg) !important; /* Light red for crits */
+    background-color: var(--crit-row-bg) !important;
+    /* Light red for crits */
     font-weight: bold;
     color: var(--crit-row-text);
 }
 
 .roll-results .graze-row {
-    background-color: var(--graze-row-bg) !important; /* Light yellow for grazes */
+    background-color: var(--graze-row-bg) !important;
+    /* Light yellow for grazes */
     color: var(--graze-row-text);
 }
 
@@ -638,7 +716,8 @@ input:checked + .slider:before { transform: translateX(26px); content: "🌙"; }
     text-align: center;
 }
 
-#comparison-table th, #comparison-table td {
+#comparison-table th,
+#comparison-table td {
     padding: 0.6rem;
     border: 1px solid var(--border-color);
 }
@@ -652,7 +731,8 @@ input:checked + .slider:before { transform: translateX(26px); content: "🌙"; }
 @media (max-width: 1280px) {
     .main-grid {
         flex-direction: column;
-        gap: 1rem; /* Reduce gap when stacked */
+        gap: 1rem;
+        /* Reduce gap when stacked */
     }
 
     .results-column {
@@ -668,7 +748,9 @@ input:checked + .slider:before { transform: translateX(26px); content: "🌙"; }
     .page-wrapper {
         padding: 1rem;
     }
-    .calculator-container, .comparison-container {
+
+    .calculator-container,
+    .comparison-container {
         padding: 1rem;
     }
 }

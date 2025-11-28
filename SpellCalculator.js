@@ -174,9 +174,9 @@ class SpellCalculator {
             });
             totalBaseDamage += totalAverage; // Summing up the individual total averages for the grand total
         });
-        
+
         // This is the aggregated average BEFORE MRR for all spells combined
-        this.totalAverageDamagePreMrr = totalBaseDamage; 
+        this.totalAverageDamagePreMrr = totalBaseDamage;
 
         const mrrMitigation = this.totalAverageDamagePreMrr * (inputs.targetMrr / 100);
         const finalDamage = this.totalAverageDamagePreMrr - mrrMitigation;
