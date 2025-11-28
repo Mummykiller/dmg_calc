@@ -24,7 +24,7 @@
         <p class="subtitle">Enter your combat stats to calculate and compare average damage per hit.</p>
 
         <nav class="set-navigation">
-            <button id="add-weapon-set-btn" class="nav-action-btn" title="Add a new weapon set for comparison">+</button>
+            <button id="add-weapon-set-btn" class="nav-action-btn" title="Add a new weapon set for comparison">⚔️</button>
             <button id="add-spell-set-btn" class="nav-action-btn" title="Add a new spell set for comparison">🔮</button>
             <button id="import-btn" class="nav-action-btn" title="Import sets from text or file">Import</button>
             <button id="export-btn" class="nav-action-btn" title="Export sets to text or file">Export</button>
@@ -304,13 +304,13 @@
                         <!-- Default spell damage row -->
                         <div class="input-group-row">
                             <input type="text" id="spell-name-1" value="Spell 1" title="Name of the spell component"
-                                placeholder="Spell Name">
+                                placeholder="Spell Name" class="adaptive-text-input">
                             <label for="spell-damage-1">Base Damage</label>
                             <input type="text" id="spell-damage-1" value="10d6"
-                                title="The spell's base damage (e.g., 10d6+50)">
+                                title="The spell's base damage (e.g., 10d6+50)" class="adaptive-text-input">
                             <span class="plus-symbol">+</span>
                             <label for="spell-cl-scaling-1" class="short-label">per CL</label>
-                            <input type="text" id="spell-cl-scaling-1" value="1d6" class="small-input"
+                            <input type="text" id="spell-cl-scaling-1" value="1d6" class="small-input adaptive-text-input"
                                 title="Bonus damage dice per caster level (e.g., 1d6 per CL)">
                             <label for="caster-level-1" class="short-label">CL</label>
                             <input type="number" id="caster-level-1" value="20" class="small-input"
@@ -391,3 +391,6 @@
 </body>
 
 </html>
+
+
+<!-- hi gemini can you read this ? -->

@@ -15,6 +15,15 @@ class SpellCalculator {
         this.getElements();
         this.addEventListeners();
 
+        // Create a hidden span for measuring text width
+        this._measurementSpan = document.createElement('span');
+        this._measurementSpan.style.position = 'absolute';
+        this._measurementSpan.style.visibility = 'hidden';
+        this._measurementSpan.style.whiteSpace = 'nowrap';
+        document.body.appendChild(this._measurementSpan);
+
+        this._initializeAdaptiveInputs();
+
         // Initial calculation
         this.calculateSpellDamage();
     }
@@ -75,6 +84,53 @@ class SpellCalculator {
         }
     }
 
+    _resizeInput(inputElement) {
+        // Apply relevant styles from the input to the measurement span
+        const computedStyle = window.getComputedStyle(inputElement);
+        this._measurementSpan.style.fontFamily = computedStyle.fontFamily;
+        this._measurementSpan.style.fontSize = computedStyle.fontSize;
+        this._measurementSpan.style.fontWeight = computedStyle.fontWeight;
+        this._measurementSpan.style.letterSpacing = computedStyle.letterSpacing;
+        this._measurementSpan.style.textTransform = computedStyle.textTransform;
+
+        const paddingLeft = parseFloat(computedStyle.paddingLeft);
+        const paddingRight = parseFloat(computedStyle.paddingRight);
+        const borderWidthLeft = parseFloat(computedStyle.borderLeftWidth);
+        const borderWidthRight = parseFloat(computedStyle.borderRightWidth);
+
+        this._measurementSpan.textContent = inputElement.value || inputElement.placeholder || '';
+
+        // Calculate the desired width including padding and border and a buffer
+        let desiredWidth = this._measurementSpan.offsetWidth + paddingLeft + paddingRight + borderWidthLeft + borderWidthRight + 4;
+
+        const minWidth = parseFloat(computedStyle.minWidth) || 50;
+
+        inputElement.style.width = `${Math.max(minWidth, desiredWidth)}px`;
+    }
+
+
+    _initializeAdaptiveInputs() {
+        const calculatorElement = document.getElementById(`calculator-set-${this.setId}`);
+        if (!calculatorElement) return;
+
+        // Use event delegation
+        calculatorElement.addEventListener('input', (e) => {
+            if (e.target.classList.contains('adaptive-text-input')) {
+                this._resizeInput(e.target);
+            }
+        });
+
+        // Run initial resize on all existing inputs
+        this.resizeAllAdaptiveInputs();
+    }
+
+    resizeAllAdaptiveInputs() {
+        const calculatorElement = document.getElementById(`calculator-set-${this.setId}`);
+        if (!calculatorElement) return;
+        calculatorElement.querySelectorAll('.adaptive-text-input').forEach(input => this._resizeInput(input));
+    }
+
+
     addSpellDamageRow(e) {
         e.preventDefault();
 
@@ -93,38 +149,37 @@ class SpellCalculator {
         const newRow = document.createElement('div');
         newRow.className = 'input-group-row';
         newRow.innerHTML = `
-            <input type="text" id="spell-name-${newRowId}${this.idSuffix}" value="Source ${newRowId}" title="Name of the spell component" placeholder="Spell Name">
+            <input type="text" id="spell-name-${newRowId}${this.idSuffix}" value="Source ${newRowId}" title="Name of the spell component" placeholder="Spell Name" class="adaptive-text-input">
             <label for="spell-damage-${newRowId}${this.idSuffix}">Base Damage</label>
-            <input type="text" id="spell-damage-${newRowId}${this.idSuffix}" value="0" title="The spell's base damage dice (e.g., 10d6+50)">
+            <input type="text" id="spell-damage-${newRowId}${this.idSuffix}" value="0" title="The spell's base damage (e.g., 10d6+50)" class="adaptive-text-input">
             <span class="plus-symbol">+</span>
             <label for="spell-cl-scaling-${newRowId}${this.idSuffix}" class="short-label">per CL</label>
-            <input type="text" id="spell-cl-scaling-${newRowId}${this.idSuffix}" value="0" class="small-input" title="Bonus damage dice per caster level (e.g., 1d6 per CL)">
+            <input type="text" id="spell-cl-scaling-${newRowId}${this.idSuffix}" value="0" class="small-input adaptive-text-input" title="Bonus damage dice per caster level (e.g., 1d6 per CL)">
             <label for="caster-level-${newRowId}${this.idSuffix}" class="short-label">CL</label>
             <input type="number" id="caster-level-${newRowId}${this.idSuffix}" value="20" class="small-input" title="Caster Level for this damage component">
             <button class="remove-row-btn" title="Remove this damage source">&times;</button>
         `;
         this.spellDamageRowsContainer.appendChild(newRow);
+        newRow.querySelectorAll('.adaptive-text-input').forEach(input => this._resizeInput(input));
     }
 
     _getInputs() {
         const spellDamageSources = [];
-        let i = 1;
-        while (true) {
-            const spellNameInput = document.getElementById(`spell-name-${i}${this.idSuffix}`);
-            const baseDmgInput = document.getElementById(`spell-damage-${i}${this.idSuffix}`);
-            const clScalingInput = document.getElementById(`spell-cl-scaling-${i}${this.idSuffix}`);
-            const casterLevelInput = document.getElementById(`caster-level-${i}${this.idSuffix}`);
+        this.spellDamageRowsContainer.querySelectorAll('.input-group-row').forEach((row, i) => {
+            const spellNameInput = row.querySelector('input[id^="spell-name-"]');
+            const baseDmgInput = row.querySelector('input[id^="spell-damage-"]');
+            const clScalingInput = row.querySelector('input[id^="spell-cl-scaling-"]');
+            const casterLevelInput = row.querySelector('input[id^="caster-level-"]');
 
-            if (!spellNameInput || !baseDmgInput || !clScalingInput || !casterLevelInput) break;
-
-            spellDamageSources.push({
-                name: spellNameInput.value || `Source ${i}`,
-                base: this.parseDiceNotation(baseDmgInput.value),
-                clScaled: this.parseDiceNotation(clScalingInput.value),
-                casterLevel: parseInt(casterLevelInput.value) || 0
-            });
-            i++;
-        }
+            if (spellNameInput && baseDmgInput && clScalingInput && casterLevelInput) {
+                spellDamageSources.push({
+                    name: spellNameInput.value || `Source ${i + 1}`,
+                    base: this.parseDiceNotation(baseDmgInput.value),
+                    clScaled: this.parseDiceNotation(clScalingInput.value),
+                    casterLevel: parseInt(casterLevelInput.value) || 0
+                });
+            }
+        });
 
         const inputs = {
             spellDamageSources: spellDamageSources,
@@ -294,7 +349,7 @@ class SpellCalculator {
                 this.addSpellDamageRow(new Event('dummy'));
             }
         }
-
+        this.resizeAllAdaptiveInputs();
         this.calculateSpellDamage();
     }
 

@@ -22,8 +22,78 @@ document.addEventListener('DOMContentLoaded', () => {
 
             this.recalculateHandler = this.handleInputChange.bind(this);
             // We will call the initial calculation from the manager
+
+            // Create a hidden span for measuring text width
+            this._measurementSpan = document.createElement('span');
+            this._measurementSpan.style.position = 'absolute';
+            this._measurementSpan.style.visibility = 'hidden';
+            this._measurementSpan.style.whiteSpace = 'nowrap';
+            document.body.appendChild(this._measurementSpan);
+
+            // Initialize adaptive sizing for all relevant inputs
+            this.setupAdaptiveInputs();
         }
 
+        /**
+         * Sets up adaptive sizing for all text-based input fields in the calculator.
+         */
+        setupAdaptiveInputs() {
+            const inputsToAdjust = [
+                this.weaponDiceInput, this.weaponDamageInput, this.bonusBaseDamageInput,
+                this.critThreatInput, this.critMultiplierInput, this.seekerDamageInput,
+                this.critMultiplier1920Input, this.sneakAttackDiceInput, this.sneakBonusInput,
+                this.missThresholdInput, this.grazeThresholdInput, this.grazePercentInput,
+                this.imbueDiceCountInput, this.imbueDieTypeInput, this.imbueScalingInput,
+            ];
+
+            inputsToAdjust.forEach(input => {
+                if (input && input.type === 'text' || input.type === 'number') {
+                    this.adjustInputWidth(input); // Initial adjustment
+                    input.addEventListener('input', (e) => this.adjustInputWidth(e.target));
+                }
+            });
+
+            // Handle dynamically added unscaled damage inputs
+            const unscaledInputs = this.unscaledRowsContainer.querySelectorAll('input[id^="unscaled-damage-"]');
+            unscaledInputs.forEach(input => {
+                this.adjustInputWidth(input); // Initial adjustment
+                input.addEventListener('input', (e) => this.adjustInputWidth(e.target));
+            });
+        }
+
+        /**
+         * Adjusts the width of an input element to fit its content.
+         * @param {HTMLInputElement} inputElement - The input element to adjust.
+         */
+        adjustInputWidth(inputElement) {
+            // Apply relevant styles from the input to the measurement span
+            const computedStyle = window.getComputedStyle(inputElement);
+            this._measurementSpan.style.fontFamily = computedStyle.fontFamily;
+            this._measurementSpan.style.fontSize = computedStyle.fontSize;
+            this._measurementSpan.style.fontWeight = computedStyle.fontWeight;
+            this._measurementSpan.style.letterSpacing = computedStyle.letterSpacing;
+            this._measurementSpan.style.textTransform = computedStyle.textTransform;
+            // Add padding from the input, but be careful with box-sizing
+            const paddingLeft = parseFloat(computedStyle.paddingLeft);
+            const paddingRight = parseFloat(computedStyle.paddingRight);
+            const borderWidthLeft = parseFloat(computedStyle.borderLeftWidth);
+            const borderWidthRight = parseFloat(computedStyle.borderRightWidth);
+
+            this._measurementSpan.textContent = inputElement.value || inputElement.placeholder || '';
+
+            // Calculate the desired width including padding and border
+            // Adding a small buffer (e.g., 2-4px) to prevent scrollbars from appearing prematurely.
+            let desiredWidth = this._measurementSpan.offsetWidth + paddingLeft + paddingRight + borderWidthLeft + borderWidthRight + 4;
+
+            const minWidth = parseFloat(computedStyle.minWidth) || 50; // Use min-width from CSS or default
+            // If the input is in a flex container (which .input-group-row is),
+            // its max-width might be constrained by the container.
+            // For now, let's cap it at a reasonable value or its parent's width.
+            const parentWidth = inputElement.closest('.input-group-row')?.clientWidth || window.innerWidth;
+            const maxWidth = parseFloat(computedStyle.maxWidth) || (parentWidth * 0.8); // 80% of parent width as a default max
+
+            inputElement.style.width = `${Math.min(maxWidth, Math.max(minWidth, desiredWidth))}px`;
+        }
 
         getElements() {
             const get = (baseId) => document.getElementById(baseId + this.idSuffix);
