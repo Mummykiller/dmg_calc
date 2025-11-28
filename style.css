@@ -275,14 +275,26 @@ h1 {
 }
 
 .input-group-row input {
-    padding: 0.5rem;
+    padding: 0.4rem; /* Reduced padding for a more compact look */
     border: 1px solid var(--input-border-color);
     border-radius: 4px;
     box-sizing: border-box;
+    /* Default behavior for inputs in a row */
+    flex-grow: 0;
+    flex-shrink: 1;
+}
+
+/* Make text inputs for dice notation adaptive */
+.input-group-row input[type="text"] {
+    flex-grow: 1; /* Allow text inputs to grow and fill space */
+    min-width: 80px; /* Set a minimum width */
+    width: auto; /* Allow it to shrink if needed */
 }
 
 .small-input {
-    width: 80px;
+    width: 60px; /* Reduced base width for small number inputs */
+    flex-grow: 0 !important; /* Ensure small inputs don't grow */
+    flex-shrink: 0;
 }
 
 .plus-symbol, .divider-symbol {

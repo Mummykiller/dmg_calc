@@ -1044,14 +1044,13 @@ class CalculatorManager {
     updateComparisonTable() {
         if (!this.comparisonTbody) return;
 
-        this.comparisonTbody.innerHTML = ''; // Clear existing rows
-
         // First, find the maximum total average damage among all sets
         let maxDamage = 0;
         if (this.calculators.size > 0) {
             const allDamages = Array.from(this.calculators.values()).map(calc => calc.totalAverageDamage);
             maxDamage = Math.max(...allDamages);
         }
+        this.comparisonTbody.innerHTML = ''; // Clear existing rows
 
         this.calculators.forEach(calc => {
             const row = document.createElement('tr');
@@ -1432,12 +1431,15 @@ class CalculatorManager {
     saveState() {
         if (this.isLoading) return; // Don't save while loading
 
+    
         const stateToSave = [];
         // Get tabs in their current DOM order to save the correct sequence
         const orderedTabs = this.navContainer.querySelectorAll('.nav-tab');
         orderedTabs.forEach(tab => {
             const setId = parseInt(tab.dataset.set, 10);
             const calc = this.calculators.get(setId);
+            if (!calc) return; // Skip if calculator doesn't exist for some reason
+    
             const state = calc.getState();
             state.tabName = calc.getTabName(); // Save the tab name
             state.setId = calc.setId; // Save the ID
@@ -1445,17 +1447,20 @@ class CalculatorManager {
             stateToSave.push(state);
         })
         sessionStorage.setItem('calculatorState', JSON.stringify(stateToSave));
+        sessionStorage.setItem('activeSetId', this.activeSetId); // Save the active set ID
     }
 
+    
     loadState() {
         const jsonString = sessionStorage.getItem('calculatorState');
-        if (this.loadSetsFromJSON(jsonString)) {
+        const activeSetId = sessionStorage.getItem('activeSetId'); // Get the saved active ID
+        if (this.loadSetsFromJSON(jsonString, activeSetId)) {
             return true;
         }
         return false;
     }
-
-    loadSetsFromJSON(jsonString) {
+    
+    loadSetsFromJSON(jsonString, activeSetIdToLoad) {
         if (!jsonString) return false;
 
         let savedStates;
@@ -1473,10 +1478,9 @@ class CalculatorManager {
         this.isLoading = true;
 
         // Clear existing sets
-        this.calculators.forEach((calc, setId) => this.removeSet(setId, true));
         this.calculators.clear();
         this.setsContainer.innerHTML = '';
-        this.navContainer.querySelectorAll('.nav-tab').forEach(tab => tab.remove());
+        this.navContainer.querySelectorAll('.nav-tab').forEach(tab => tab.remove()); // Only remove tabs, not other buttons
         nextSetId = 1; // Reset counter
 
         savedStates.forEach((state) => {
@@ -1493,7 +1497,9 @@ class CalculatorManager {
             }
         });
 
-        this.switchToSet(savedStates[0].setId); // Activate the first set from the saved state
+        // Switch to the saved active set, or default to the first one if not found
+        const targetSetId = activeSetIdToLoad ? parseInt(activeSetIdToLoad, 10) : savedStates[0]?.setId;
+        this.switchToSet(targetSetId || 1);
         this.isLoading = false;
         this.updateComparisonTable(); // Populate comparison table after loading
         this.hideModal();

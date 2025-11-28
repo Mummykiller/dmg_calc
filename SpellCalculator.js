@@ -25,7 +25,6 @@ class SpellCalculator {
         // Input elements
         this.spellDamageRowsContainer = get('spell-damage-rows-container');
         this.addSpellDamageRowBtn = get('add-spell-damage-row-btn');
-        this.casterLevelInput = get('caster-level');
         this.spellPowerInput = get('spell-power');
         this.spellCritChanceInput = get('spell-crit-chance');
         this.spellCritDamageInput = get('spell-crit-damage');
@@ -55,6 +54,11 @@ class SpellCalculator {
             };
             calculatorElement.addEventListener('input', recordChange);
             calculatorElement.addEventListener('change', recordChange);
+
+            // Add direct listeners for metamagic checkboxes
+            this.empowerCheckbox.addEventListener('change', recordChange);
+            this.maximizeCheckbox.addEventListener('change', recordChange);
+            this.intensifyCheckbox.addEventListener('change', recordChange);
 
             // Add listener for adding a new spell damage row
             this.addSpellDamageRowBtn.addEventListener('click', (e) => this.addSpellDamageRow(e));
@@ -89,12 +93,14 @@ class SpellCalculator {
         const newRow = document.createElement('div');
         newRow.className = 'input-group-row';
         newRow.innerHTML = `
-            <label for="spell-name-${newRowId}${this.idSuffix}">Spell Name ${newRowId}</label>
-            <input type="text" id="spell-name-${newRowId}${this.idSuffix}" value="Spell ${newRowId}" title="Name of the spell">
-            <label for="spell-damage-${newRowId}${this.idSuffix}">Base Dmg</label>
+            <input type="text" id="spell-name-${newRowId}${this.idSuffix}" value="Source ${newRowId}" title="Name of the spell component" placeholder="Spell Name">
+            <label for="spell-damage-${newRowId}${this.idSuffix}">Base Damage</label>
             <input type="text" id="spell-damage-${newRowId}${this.idSuffix}" value="0" title="The spell's base damage dice (e.g., 10d6+50)">
-            <label for="spell-cl-scaling-${newRowId}${this.idSuffix}" class="short-label">CL Scale</label>
+            <span class="plus-symbol">+</span>
+            <label for="spell-cl-scaling-${newRowId}${this.idSuffix}" class="short-label">per CL</label>
             <input type="text" id="spell-cl-scaling-${newRowId}${this.idSuffix}" value="0" class="small-input" title="Bonus damage dice per caster level (e.g., 1d6 per CL)">
+            <label for="caster-level-${newRowId}${this.idSuffix}" class="short-label">CL</label>
+            <input type="number" id="caster-level-${newRowId}${this.idSuffix}" value="20" class="small-input" title="Caster Level for this damage component">
             <button class="remove-row-btn" title="Remove this damage source">&times;</button>
         `;
         this.spellDamageRowsContainer.appendChild(newRow);
@@ -107,20 +113,21 @@ class SpellCalculator {
             const spellNameInput = document.getElementById(`spell-name-${i}${this.idSuffix}`);
             const baseDmgInput = document.getElementById(`spell-damage-${i}${this.idSuffix}`);
             const clScalingInput = document.getElementById(`spell-cl-scaling-${i}${this.idSuffix}`);
+            const casterLevelInput = document.getElementById(`caster-level-${i}${this.idSuffix}`);
 
-            if (!spellNameInput || !baseDmgInput || !clScalingInput) break;
+            if (!spellNameInput || !baseDmgInput || !clScalingInput || !casterLevelInput) break;
 
             spellDamageSources.push({
-                name: spellNameInput.value,
+                name: spellNameInput.value || `Source ${i}`,
                 base: this.parseDiceNotation(baseDmgInput.value),
-                clScaled: this.parseDiceNotation(clScalingInput.value)
+                clScaled: this.parseDiceNotation(clScalingInput.value),
+                casterLevel: parseInt(casterLevelInput.value) || 0
             });
             i++;
         }
 
-        return {
+        const inputs = {
             spellDamageSources: spellDamageSources,
-            casterLevel: parseInt(this.casterLevelInput.value) || 0,
             spellPower: parseInt(this.spellPowerInput.value) || 0,
             critChance: (parseFloat(this.spellCritChanceInput.value) || 0) / 100,
             critDamage: (parseFloat(this.spellCritDamageInput.value) || 0) / 100,
@@ -129,6 +136,7 @@ class SpellCalculator {
             isMaximized: this.maximizeCheckbox.checked,
             isIntensified: this.intensifyCheckbox.checked,
         };
+        return inputs;
     }
 
     calculateSpellDamage() {
@@ -153,7 +161,7 @@ class SpellCalculator {
         const critMultiplier = 2 + inputs.critDamage;
 
         inputs.spellDamageSources.forEach(source => {
-            const spellBaseDamage = source.base + (source.clScaled * inputs.casterLevel);
+            const spellBaseDamage = source.base + (source.clScaled * source.casterLevel);
             const averageHit = spellBaseDamage * spellPowerMultiplier;
             const averageCrit = averageHit * critMultiplier;
             const totalAverage = (averageHit * (1 - inputs.critChance)) + (averageCrit * inputs.critChance);
@@ -185,6 +193,7 @@ class SpellCalculator {
         this.finalSpellDamageSpan.textContent = finalDamage.toFixed(2);
 
         this._updateSummaryUI(); // Call the new UI update method
+    }
 
     _updateSummaryUI() {
         const individualSpellDamageSummary = document.getElementById(`individual-spell-damage-summary${this.idSuffix}`);
@@ -217,11 +226,13 @@ class SpellCalculator {
             const spellNameInput = row.querySelector('input[id^="spell-name-"]');
             const baseDmgInput = row.querySelector('input[id^="spell-damage-"]');
             const clScalingInput = row.querySelector('input[id^="spell-cl-scaling-"]');
-            if (spellNameInput && baseDmgInput && clScalingInput) {
+            const casterLevelInput = row.querySelector('input[id^="caster-level-"]');
+            if (spellNameInput && baseDmgInput && clScalingInput && casterLevelInput) {
                 spellDamageSourcesState.push({
                     name: spellNameInput.value,
                     base: baseDmgInput.value,
-                    clScaled: clScalingInput.value
+                    clScaled: clScalingInput.value,
+                    casterLevel: casterLevelInput.value
                 });
             }
         });
@@ -237,7 +248,7 @@ class SpellCalculator {
         allInputs.forEach(input => {
             const key = input.id.replace(`-set${this.setId}`, '');
             // Skip dynamic spell damage source inputs here, as they are handled below
-            if (key.startsWith('spell-name-') || key.startsWith('spell-damage-') || key.startsWith('spell-cl-scaling-')) {
+            if (key.startsWith('spell-name-') || key.startsWith('spell-damage-') || key.startsWith('spell-cl-scaling-') || key.startsWith('caster-level-')) {
                 return;
             }
 
@@ -251,41 +262,36 @@ class SpellCalculator {
         });
 
         // Handle spell damage rows
+        // Clear all existing dynamic spell damage rows
         let existingRows = this.spellDamageRowsContainer.querySelectorAll('.input-group-row');
-        for (let i = existingRows.length - 1; i >= 1; i--) {
-            existingRows[i].remove();
-        }
+        existingRows.forEach(row => row.remove());
 
         if (state.spellDamageSources && state.spellDamageSources.length > 0) {
-            // Update the first row
-            const firstSpellNameInput = document.getElementById(`spell-name-1${this.idSuffix}`);
-            const firstBaseDmgInput = document.getElementById(`spell-damage-1${this.idSuffix}`);
-            const firstClScalingInput = document.getElementById(`spell-cl-scaling-1${this.idSuffix}`);
+            state.spellDamageSources.forEach((source, index) => {
+                // Call addSpellDamageRow to create the div with the correct dynamic IDs
+                this.addSpellDamageRow(new Event('dummy')); // Pass a dummy event
 
-            if (firstSpellNameInput && firstBaseDmgInput && firstClScalingInput) {
-                firstSpellNameInput.value = state.spellDamageSources[0].name;
-                firstBaseDmgInput.value = state.spellDamageSources[0].base;
-                firstClScalingInput.value = state.spellDamageSources[0].clScaled;
-            } else {
-                this.addSpellDamageRow(new Event('dummy'));
-                document.getElementById(`spell-name-1${this.idSuffix}`).value = state.spellDamageSources[0].name;
-                document.getElementById(`spell-damage-1${this.idSuffix}`).value = state.spellDamageSources[0].base;
-                document.getElementById(`spell-cl-scaling-1${this.idSuffix}`).value = state.spellDamageSources[0].clScaled;
-            }
+                // Get the newly added row (always the last child)
+                const newRow = this.spellDamageRowsContainer.lastElementChild;
 
-            // Add remaining rows
-            for (let i = 1; i < state.spellDamageSources.length; i++) {
+                // Populate the inputs within this new row
+                if (newRow) {
+                    const spellNameInput = newRow.querySelector('input[id^="spell-name-"]');
+                    const baseDmgInput = newRow.querySelector('input[id^="spell-damage-"]');
+                    const clScalingInput = newRow.querySelector('input[id^="spell-cl-scaling-"]');
+                    const casterLevelInput = newRow.querySelector('input[id^="caster-level-"]');
+
+                    if (spellNameInput) spellNameInput.value = source.name;
+                    if (baseDmgInput) baseDmgInput.value = source.base;
+                    if (clScalingInput) clScalingInput.value = source.clScaled;
+                    if (casterLevelInput) casterLevelInput.value = source.casterLevel;
+                }
+            });
+        } else {
+            // If no saved sources, ensure at least one default empty row if needed
+            // This case should be handled by the initial template, but to be safe:
+            if (this.spellDamageRowsContainer.children.length === 0) {
                 this.addSpellDamageRow(new Event('dummy'));
-                const newRowIndex = i + 1;
-                document.getElementById(`spell-name-${newRowIndex}${this.idSuffix}`).value = state.spellDamageSources[i].name;
-                document.getElementById(`spell-damage-${newRowIndex}${this.idSuffix}`).value = state.spellDamageSources[i].base;
-                document.getElementById(`spell-cl-scaling-${newRowIndex}${this.idSuffix}`).value = state.spellDamageSources[i].clScaled;
-            }
-        } else { // No saved sources, ensure at least one default empty row if needed
-            if (existingRows.length === 1) {
-                document.getElementById(`spell-name-1${this.idSuffix}`).value = "Spell 1";
-                document.getElementById(`spell-damage-1${this.idSuffix}`).value = "0";
-                document.getElementById(`spell-cl-scaling-1${this.idSuffix}`).value = "0";
             }
         }
 

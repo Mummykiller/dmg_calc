@@ -250,25 +250,23 @@
     <template id="spell-calculator-template">
         <div class="main-grid">
             <div class="input-column">
-                <div class="stats-group">
-                    <label class="section-headline">Spell Properties</label>
+                <div class="stats-group" id="spell-crafter-group">
+                    <label class="section-headline">Spell Crafter</label>
                     <div id="spell-damage-rows-container">
                         <!-- Default spell damage row -->
                         <div class="input-group-row">
-                            <label for="spell-name-1">Spell Name 1</label>
-                            <input type="text" id="spell-name-1" value="Spell 1" title="Name of the spell">
-                            <label for="spell-damage-1">Base Dmg</label>
-                            <input type="text" id="spell-damage-1" value="10d6" title="The spell's base damage dice (e.g., 10d6+50)">
-                            <label for="spell-cl-scaling-1" class="short-label">CL Scale</label>
-                            <input type="text" id="spell-cl-scaling-1" value="0" class="small-input" title="Bonus damage dice per caster level (e.g., 1d6 per CL)">
+                            <input type="text" id="spell-name-1" value="Spell 1" title="Name of the spell component" placeholder="Spell Name">
+                            <label for="spell-damage-1">Base Damage</label>
+                            <input type="text" id="spell-damage-1" value="10d6" title="The spell's base damage (e.g., 10d6+50)">
+                            <span class="plus-symbol">+</span>
+                            <label for="spell-cl-scaling-1" class="short-label">per CL</label>
+                            <input type="text" id="spell-cl-scaling-1" value="1d6" class="small-input" title="Bonus damage dice per caster level (e.g., 1d6 per CL)">
+                            <label for="caster-level-1" class="short-label">CL</label>
+                            <input type="number" id="caster-level-1" value="20" class="small-input" title="Caster Level for this damage component">
                             <button class="remove-row-btn" title="Remove this damage source">&times;</button>
                         </div>
                     </div>
                     <button id="add-spell-damage-row-btn" class="small-btn" style="width: auto; margin-top: 0.5rem;">Add Spell Damage Source</button>
-                    <div class="input-group-row">
-                        <label for="caster-level">Caster Level</label>
-                        <input type="number" id="caster-level" value="20" class="small-input" title="Your character's caster level for this spell.">
-                    </div>
                 </div>
                 <div class="stats-group">
                     <label class="section-headline">Spell Power & Criticals</label>
