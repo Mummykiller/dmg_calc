@@ -10,7 +10,7 @@ class SpellCalculator {
         this.averageBaseHit = 0;
         this.averageCritHit = 0;
         this.finalAverageDamage = 0;
-        this.mrrMitigation = 0;
+
 
         this.getElements();
         this.addEventListeners();
@@ -37,7 +37,7 @@ class SpellCalculator {
         this.spellPowerInput = get('spell-power');
         this.spellCritChanceInput = get('spell-crit-chance');
         this.spellCritDamageInput = get('spell-crit-damage');
-        this.targetMrrInput = get('target-mrr');
+
         this.empowerCheckbox = get('metamagic-empower');
         this.maximizeCheckbox = get('metamagic-maximize');
         this.intensifyCheckbox = get('metamagic-intensify');
@@ -48,7 +48,7 @@ class SpellCalculator {
         this.avgSpellDamageSpan = get('avg-spell-damage');
         this.avgSpellCritDamageSpan = get('avg-spell-crit-damage');
         this.totalAvgSpellDamageSpan = get('total-avg-spell-damage');
-        this.mrrMitigationSpan = get('mrr-mitigation');
+
         this.finalSpellDamageSpan = get('final-spell-damage');
     }
 
@@ -186,7 +186,7 @@ class SpellCalculator {
             spellPower: parseInt(this.spellPowerInput.value) || 0,
             critChance: (parseFloat(this.spellCritChanceInput.value) || 0) / 100,
             critDamage: (parseFloat(this.spellCritDamageInput.value) || 0) / 100,
-            targetMrr: parseInt(this.targetMrrInput.value) || 0,
+
             isEmpowered: this.empowerCheckbox.checked,
             isMaximized: this.maximizeCheckbox.checked,
             isIntensified: this.intensifyCheckbox.checked,
@@ -231,21 +231,16 @@ class SpellCalculator {
         });
 
         // This is the aggregated average BEFORE MRR for all spells combined
-        this.totalAverageDamagePreMrr = totalBaseDamage;
 
-        const mrrMitigation = this.totalAverageDamagePreMrr * (inputs.targetMrr / 100);
-        const finalDamage = this.totalAverageDamagePreMrr - mrrMitigation;
 
         // Store for comparison table - this is the final damage for ALL spells combined
-        this.totalAverageDamage = finalDamage;
+        this.totalAverageDamage = totalBaseDamage;
         this.individualSpellDamages = individualSpellDamages; // Store individual results
 
         // Update UI
-        this.avgSpellDamageSpan.textContent = this.totalAverageDamagePreMrr.toFixed(2); // This now represents total pre-MRR average
-        this.avgSpellCritDamageSpan.textContent = 'N/A'; // No single value for all
-        this.totalAvgSpellDamageSpan.textContent = this.totalAverageDamagePreMrr.toFixed(2);
-        this.mrrMitigationSpan.textContent = mrrMitigation.toFixed(2);
-        this.finalSpellDamageSpan.textContent = finalDamage.toFixed(2);
+        this.avgSpellDamageSpan.textContent = totalBaseDamage.toFixed(2); // This now represents total pre-MRR average
+        this.totalAvgSpellDamageSpan.textContent = totalBaseDamage.toFixed(2);
+        this.finalSpellDamageSpan.textContent = totalBaseDamage.toFixed(2);
 
         this._updateSummaryUI(); // Call the new UI update method
     }

@@ -1433,7 +1433,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     summary += `Spell Power: ${state['spell-power'] || 0}\n`;
                     summary += `Crit Chance: ${state['spell-crit-chance'] || 0}%\n`;
                     summary += `Crit Damage: ${state['spell-crit-damage'] || 0}%\n`;
-                    summary += `Target MRR: ${state['target-mrr'] || 0}\n\n`;
+        
 
                     summary += `--- AVERAGES ---\n`;
                     summary += `Total Avg Damage: ${calc.totalAverageDamage.toFixed(2)}\n\n\n`;
