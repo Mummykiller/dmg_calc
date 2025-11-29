@@ -34,6 +34,7 @@ class SpellCalculator {
         // Input elements
         this.spellDamageRowsContainer = get('spell-damage-rows-container');
         this.addSpellDamageRowBtn = get('add-spell-damage-row-btn');
+
         this.spellPowerInput = get('spell-power');
         this.spellCritChanceInput = get('spell-crit-chance');
         this.spellCritDamageInput = get('spell-crit-damage');
@@ -72,6 +73,8 @@ class SpellCalculator {
             // Add listener for adding a new spell damage row
             this.addSpellDamageRowBtn.addEventListener('click', (e) => this.addSpellDamageRow(e));
 
+
+
             // Use event delegation for remove buttons within the spellDamageRowsContainer
             this.spellDamageRowsContainer.addEventListener('click', (e) => {
                 if (e.target && e.target.classList.contains('remove-row-btn')) {
@@ -79,6 +82,12 @@ class SpellCalculator {
                     e.target.closest('.input-group-row').remove();
                     this.calculateSpellDamage(); // Recalculate after removing a row
                     this.manager.saveState();
+                } else if (e.target && e.target.classList.contains('add-scaling-input-btn')) {
+                    e.preventDefault();
+                    this._addAdditionalScalingInput(e.target.closest('.input-group-row'));
+                } else if (e.target && e.target.classList.contains('remove-scaling-input-btn')) {
+                    e.preventDefault();
+                    this._removeAdditionalScalingInput(e.target.closest('.input-group-row'));
                 }
             });
         }
@@ -131,6 +140,82 @@ class SpellCalculator {
     }
 
 
+    _addAdditionalScalingInput(rowElement) {
+        const rowIdMatch = rowElement.querySelector('input[id^="spell-name-"]').id.match(/spell-name-(\d+)/);
+        if (!rowIdMatch) return;
+        const spellRowId = rowIdMatch[1];
+
+        const additionalScalingInputs = rowElement.querySelectorAll('input[id^="additional-scaling-"]');
+        if (additionalScalingInputs.length >= 5) { // Limit to 5
+            rowElement.querySelector('.add-scaling-input-btn').classList.add('hidden');
+            return;
+        }
+
+        const addScalingButton = rowElement.querySelector('.add-scaling-input-btn');
+        const removeScalingButton = rowElement.querySelector('.remove-scaling-input-btn');
+
+        // Create label and input
+        const newAdditionalScalingId = additionalScalingInputs.length + 1;
+        const label = document.createElement('label');
+        label.setAttribute('for', `additional-scaling-${spellRowId}-${newAdditionalScalingId}${this.idSuffix}`);
+        label.classList.add('short-label');
+        label.textContent = `Add Scale ${newAdditionalScalingId}`;
+
+        const input = document.createElement('input');
+        input.setAttribute('type', 'text');
+        input.setAttribute('id', `additional-scaling-${spellRowId}-${newAdditionalScalingId}${this.idSuffix}`);
+        input.setAttribute('value', '0');
+        input.classList.add('small-input', 'adaptive-text-input');
+        input.setAttribute('title', 'Additional flat damage bonus applied after Spell Power scaling');
+
+        // Insert elements before the addScalingButton
+        rowElement.insertBefore(label, addScalingButton);
+        rowElement.insertBefore(input, addScalingButton);
+
+        // Show the remove button
+        removeScalingButton.classList.remove('hidden');
+
+        // If 5 inputs are present, hide the add button
+        if (additionalScalingInputs.length + 1 >= 5) {
+            addScalingButton.classList.add('hidden');
+        }
+
+        // Recalculate damage and save state
+        this.calculateSpellDamage();
+        this.manager.saveState();
+        this._resizeInput(input); // Resize the new input
+    }
+
+    _removeAdditionalScalingInput(rowElement) {
+        const additionalScalingInputs = rowElement.querySelectorAll('input[id^="additional-scaling-"]');
+        if (additionalScalingInputs.length === 0) {
+            return; // Nothing to remove
+        }
+
+        const lastInput = additionalScalingInputs[additionalScalingInputs.length - 1];
+        const lastLabel = rowElement.querySelector(`label[for="${lastInput.id}"]`);
+
+        if (lastInput) lastInput.remove();
+        if (lastLabel) lastLabel.remove();
+
+        const addScalingButton = rowElement.querySelector('.add-scaling-input-btn');
+        const removeScalingButton = rowElement.querySelector('.remove-scaling-input-btn');
+
+        // If no more inputs, hide the remove button
+        if (additionalScalingInputs.length - 1 === 0) {
+            removeScalingButton.classList.add('hidden');
+        }
+
+        // Always show the add button if below limit
+        if (additionalScalingInputs.length - 1 < 5) {
+            addScalingButton.classList.remove('hidden');
+        }
+
+        this.calculateSpellDamage();
+        this.manager.saveState();
+    }
+
+
     addSpellDamageRow(e) {
         e.preventDefault();
 
@@ -157,6 +242,8 @@ class SpellCalculator {
             <input type="text" id="spell-cl-scaling-${newRowId}${this.idSuffix}" value="0" class="small-input adaptive-text-input" title="Bonus damage dice per caster level (e.g., 1d6 per CL)">
             <label for="caster-level-${newRowId}${this.idSuffix}" class="short-label">CL</label>
             <input type="number" id="caster-level-${newRowId}${this.idSuffix}" value="20" class="small-input" title="Caster Level for this damage component">
+            <button class="add-scaling-input-btn small-btn" title="Add additional scaling input">+</button>
+            <button class="remove-scaling-input-btn small-btn hidden" title="Remove last additional scaling input">-</button>
             <button class="remove-row-btn" title="Remove this damage source">&times;</button>
         `;
         this.spellDamageRowsContainer.appendChild(newRow);
@@ -171,11 +258,18 @@ class SpellCalculator {
             const clScalingInput = row.querySelector('input[id^="spell-cl-scaling-"]');
             const casterLevelInput = row.querySelector('input[id^="caster-level-"]');
 
+            // Collect all additional scaling inputs for this row
+            let totalAdditionalScaling = 0;
+            row.querySelectorAll('input[id^="additional-scaling-"]').forEach(input => {
+                totalAdditionalScaling += this.parseDiceNotation(input.value);
+            });
+
             if (spellNameInput && baseDmgInput && clScalingInput && casterLevelInput) {
                 spellDamageSources.push({
                     name: spellNameInput.value || `Source ${i + 1}`,
                     base: this.parseDiceNotation(baseDmgInput.value),
                     clScaled: this.parseDiceNotation(clScalingInput.value),
+                    additionalScaling: totalAdditionalScaling, // Store the sum
                     casterLevel: parseInt(casterLevelInput.value) || 0
                 });
             }
@@ -217,7 +311,8 @@ class SpellCalculator {
 
         inputs.spellDamageSources.forEach(source => {
             const spellBaseDamage = source.base + (source.clScaled * source.casterLevel);
-            const averageHit = spellBaseDamage * spellPowerMultiplier;
+            const damageBeforeSpellPower = spellBaseDamage + source.additionalScaling; // Add additional scaling here
+            const averageHit = damageBeforeSpellPower * spellPowerMultiplier;
             const averageCrit = averageHit * critMultiplier;
             const totalAverage = (averageHit * (1 - inputs.critChance)) + (averageCrit * inputs.critChance);
 
@@ -273,15 +368,20 @@ class SpellCalculator {
         // Store spell damage rows separately
         const spellDamageSourcesState = [];
         this.spellDamageRowsContainer.querySelectorAll('.input-group-row').forEach((row) => {
-            const spellNameInput = row.querySelector('input[id^="spell-name-"]');
-            const baseDmgInput = row.querySelector('input[id^="spell-damage-"]');
             const clScalingInput = row.querySelector('input[id^="spell-cl-scaling-"]');
             const casterLevelInput = row.querySelector('input[id^="caster-level-"]');
+
+            const additionalScalings = [];
+            row.querySelectorAll('input[id^="additional-scaling-"]').forEach(input => {
+                additionalScalings.push(input.value);
+            });
+
             if (spellNameInput && baseDmgInput && clScalingInput && casterLevelInput) {
                 spellDamageSourcesState.push({
                     name: spellNameInput.value,
                     base: baseDmgInput.value,
                     clScaled: clScalingInput.value,
+                    additionalScalings: additionalScalings, // Store as an array
                     casterLevel: casterLevelInput.value
                 });
             }
@@ -298,7 +398,7 @@ class SpellCalculator {
         allInputs.forEach(input => {
             const key = input.id.replace(`-set${this.setId}`, '');
             // Skip dynamic spell damage source inputs here, as they are handled below
-            if (key.startsWith('spell-name-') || key.startsWith('spell-damage-') || key.startsWith('spell-cl-scaling-') || key.startsWith('caster-level-')) {
+            if (key.startsWith('spell-name-') || key.startsWith('spell-damage-') || key.startsWith('spell-cl-scaling-') || key.startsWith('additional-scaling-') || key.startsWith('caster-level-')) {
                 return;
             }
 
@@ -335,6 +435,38 @@ class SpellCalculator {
                     if (baseDmgInput) baseDmgInput.value = source.base;
                     if (clScalingInput) clScalingInput.value = source.clScaled;
                     if (casterLevelInput) casterLevelInput.value = source.casterLevel;
+
+                    // If additional scalings were saved, add the inputs and set their values
+                    if (source.additionalScalings && source.additionalScalings.length > 0) {
+                        source.additionalScalings.forEach((scalingValue) => {
+                            // Ensure scalingValue is not empty before adding
+                            if (scalingValue && scalingValue !== '') {
+                                this._addAdditionalScalingInput(newRow); // Add input elements
+                                // Find the last added additional scaling input and set its value
+                                const additionalScalingInputs = newRow.querySelectorAll('input[id^="additional-scaling-"]');
+                                if (additionalScalingInputs.length > 0) {
+                                    additionalScalingInputs[additionalScalingInputs.length - 1].value = scalingValue;
+                                }
+                            }
+                        });
+                    }
+
+                    // Adjust button visibility after all additional scalings are loaded
+                    const currentAdditionalInputs = newRow.querySelectorAll('input[id^="additional-scaling-"]');
+                    const addScalingButton = newRow.querySelector('.add-scaling-input-btn');
+                    const removeScalingButton = newRow.querySelector('.remove-scaling-input-btn');
+
+                    if (currentAdditionalInputs.length > 0) {
+                        removeScalingButton.classList.remove('hidden');
+                    } else {
+                        removeScalingButton.classList.add('hidden');
+                    }
+
+                    if (currentAdditionalInputs.length >= 5) {
+                        addScalingButton.classList.add('hidden');
+                    } else {
+                        addScalingButton.classList.remove('hidden');
+                    }
                 }
             });
         } else {
