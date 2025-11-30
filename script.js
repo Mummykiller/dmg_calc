@@ -252,38 +252,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 multiStrikeValue = Math.min(multiStrikeValue, 100);
             }
 
-            return {
-                additionalWeaponDice: parseInt(this.weaponDiceInput.value) || 0,
-                parsedWeaponDmg: this.parseDiceNotation(this.weaponDamageInput.value) || 0,
-                bonusBaseDmg: parseFloat(this.bonusBaseDamageInput.value) || 0,
-                meleePower: parseFloat(this.meleePowerInput.value) || 0,
-                spellPower: parseFloat(this.spellPowerInput.value) || 0,
-                threatRange: this.parseThreatRange(this.critThreatInput.value),
-                critMult: parseFloat(this.critMultiplierInput.value) || 2,
-                critMult1920: parseFloat(this.critMultiplier1920Input.value) || 0,
-                seekerDmg: this.parseDiceNotation(this.seekerDamageInput.value), // Allow dice notation for seeker
-                sneakDiceCount: parseInt(this.sneakAttackDiceInput.value) || 0,
-                sneakBonusDmg: parseFloat(this.sneakBonusInput.value) || 0,
-                missThreshold: Math.max(1, parseInt(this.missThresholdInput.value) || 1),
-                grazeThreshold: parseInt(this.grazeThresholdInput.value) || 0,
-                grazePercent: (parseFloat(this.grazePercentInput.value) || 0) / 100,
-                reaperSkulls: parseInt(this.reaperSkullsSelect.value) || 0,
-                imbueDiceCount: parseInt(this.imbueDiceCountInput.value) || 0,
-                imbueDieType: parseInt(this.imbueDieTypeInput.value) || 0,
-                imbueScaling: (parseFloat(this.imbueScalingInput.value) || 100) / 100,
-                imbueCrits: this.imbueCritsCheckbox.checked,
-                imbueUsesSpellpower: this.imbueUsesSpellpowerCheckbox.checked,
-                doublestrikeChance: multiStrikeValue / 100,
-                isDoubleshot: isDoubleshot,
-                unscaled: this._parseUnscaledDamage()
-            };
-        }
-
-        /**
-         * Parses all unscaled damage rows and categorizes them.
-         * @returns {object} An object containing categorized unscaled damage values.
-         */
-        _parseUnscaledDamage() {
             const unscaled = {
                 normal_multi: 0,
                 normal_noMulti: 0,
@@ -313,7 +281,33 @@ document.addEventListener('DOMContentLoaded', () => {
                     }
                 }
             });
-            return unscaled;
+
+
+            return {
+                additionalWeaponDice: parseInt(this.weaponDiceInput.value) || 0,
+                parsedWeaponDmg: this.parseDiceNotation(this.weaponDamageInput.value) || 0,
+                bonusBaseDmg: parseFloat(this.bonusBaseDamageInput.value) || 0,
+                meleePower: parseFloat(this.meleePowerInput.value) || 0,
+                spellPower: parseFloat(this.spellPowerInput.value) || 0,
+                threatRange: this.parseThreatRange(this.critThreatInput.value),
+                critMult: parseFloat(this.critMultiplierInput.value) || 2,
+                critMult1920: parseFloat(this.critMultiplier1920Input.value) || 0,
+                seekerDmg: this.parseDiceNotation(this.seekerDamageInput.value), // Allow dice notation for seeker
+                sneakDiceCount: parseInt(this.sneakAttackDiceInput.value) || 0,
+                sneakBonusDmg: parseFloat(this.sneakBonusInput.value) || 0,
+                missThreshold: Math.max(1, parseInt(this.missThresholdInput.value) || 1),
+                grazeThreshold: parseInt(this.grazeThresholdInput.value) || 0,
+                grazePercent: (parseFloat(this.grazePercentInput.value) || 0) / 100,
+                reaperSkulls: parseInt(this.reaperSkullsSelect.value) || 0,
+                imbueDiceCount: parseInt(this.imbueDiceCountInput.value) || 0,
+                imbueDieType: parseInt(this.imbueDieTypeInput.value) || 0,
+                imbueScaling: (parseFloat(this.imbueScalingInput.value) || 100) / 100,
+                imbueCrits: this.imbueCritsCheckbox.checked,
+                imbueUsesSpellpower: this.imbueUsesSpellpowerCheckbox.checked,
+                doublestrikeChance: multiStrikeValue / 100,
+                isDoubleshot: isDoubleshot,
+                unscaled: unscaled
+            };
         }
 
         /**
