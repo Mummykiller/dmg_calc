@@ -12,6 +12,7 @@ document.addEventListener('DOMContentLoaded', () => {
             this.totalAvgSneakDmg = 0;
             this.totalAvgUnscaledDmg = 0; // New property for unscaled damage
             this.totalAvgImbueDmg = 0; // This will hold the sum of all unscaled sources
+            this.totalAvgScaledDiceDmg = 0;
 
             this.idSuffix = `-set${setId}`;
             this.getElements();
@@ -129,10 +130,13 @@ document.addEventListener('DOMContentLoaded', () => {
             this.avgSneakDamageSpan = get('avg-sneak-damage');
             this.avgImbueDamageSpan = get('avg-imbue-damage');
             this.avgUnscaledDamageSpan = get('avg-unscaled-damage'); // Get the new summary span
+            this.avgScaledDiceDamageSpan = get('avg-scaled-dice-damage');
             this.totalAvgDamageSpan = get('total-avg-damage');
             this.weaponScalingSpan = get('weapon-scaling');
             this.sneakScalingSpan = get('sneak-scaling');
             this.imbueScalingBreakdownSpan = get('imbue-scaling-breakdown');
+            this.scaledDiceScalingBreakdownSpan = get('scaled-dice-scaling-breakdown');
+            this.scaledDiceAddedInputDisplaySpan = get('scaled-dice-added-input-display'); // New display in input area
             this.imbuePowerSourceSpan = get('imbue-power-source');
             this.summaryHeader = get('summary-header');
             this.reaperPenaltySpan = get('reaper-penalty');
@@ -146,6 +150,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
             this.unscaledRowsContainer = get('unscaled-rows-container');
             this.addUnscaledRowBtn = get('add-unscaled-row-btn');
+
+            // Scaled Dice Damage elements
+            this.scaledDiceRowsContainer = get('scaled-dice-rows-container');
+            this.addScaledDiceRowBtn = get('add-scaled-dice-row-btn');
         }
 
         /**
@@ -287,6 +295,25 @@ document.addEventListener('DOMContentLoaded', () => {
             });
 
 
+            const scaledDiceDamage = [];
+            this.scaledDiceRowsContainer.querySelectorAll('.input-group-row').forEach(row => {
+                const baseDiceInput = row.querySelector(`input[id^="scaled-dice-base-"]`);
+                const scalingToggle = row.querySelector(`input[id^="scaled-dice-scaling-toggle-"]`);
+                const enabledCheckbox = row.querySelector(`input[id^="scaled-dice-enabled-"]`);
+
+                // Only process the row if it's enabled.
+                if (baseDiceInput && scalingToggle && enabledCheckbox && enabledCheckbox.checked) {
+                    const procChanceInput = row.querySelector(`input[id^="scaled-dice-proc-chance-"]`);
+                    scaledDiceDamage.push({
+                        baseDice: baseDiceInput.value,
+                        procChance: (parseFloat(procChanceInput.value) || 100) / 100,
+                        enableScaling: scalingToggle.checked,
+                        scalingPercent: parseFloat(row.querySelector(`input[id^="scaled-dice-scaling-percent-"]`).value) || 100,
+                        isEnabled: enabledCheckbox.checked
+                    });
+                }
+            });
+
             return {
                 additionalWeaponDice: parseInt(this.weaponDiceInput.value) || 0,
                 parsedWeaponDmg: this.parseDiceNotation(this.weaponDamageInput.value) || 0,
@@ -310,7 +337,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 imbueUsesSpellpower: this.imbueUsesSpellpowerCheckbox.checked,
                 doublestrikeChance: multiStrikeValue / 100,
                 isDoubleshot: isDoubleshot,
-                unscaled: unscaled
+                unscaled: unscaled,
+                scaledDiceDamage: scaledDiceDamage
             };
         }
 
@@ -351,8 +379,8 @@ document.addEventListener('DOMContentLoaded', () => {
         _calculateDamagePortions(inputs) {
             const {
                 additionalWeaponDice, parsedWeaponDmg, bonusBaseDmg, meleePower, spellPower,
-                seekerDmg, sneakDiceCount, sneakBonusDmg, imbueDiceCount, imbueDieType,
-                imbueScaling, imbueUsesSpellpower
+                seekerDmg, sneakDiceCount, sneakBonusDmg, imbueDiceCount, imbueDieType, // This is a long line
+                imbueScaling, imbueUsesSpellpower, scaledDiceDamage
             } = inputs;
 
             const baseDmg = parsedWeaponDmg + (additionalWeaponDice * parsedWeaponDmg) + bonusBaseDmg;
@@ -367,7 +395,51 @@ document.addEventListener('DOMContentLoaded', () => {
             const powerForImbue = imbueUsesSpellpower ? spellPower : meleePower;
             const imbuePortion = imbueDice * (1 + (powerForImbue * imbueScaling) / 100);
 
-            return { baseDmg, weaponPortion, seekerPortion, sneakDiceDmg, sneakPortion, imbueDice, imbuePortion, powerForImbue };
+            let totalAvgScaledDiceDmg = 0;
+            let totalAddedScaledDice = 0;
+            let scaledDiceBreakdownText = [];
+            const addedDiceBreakdown = [];
+            scaledDiceDamage.forEach(scaledDmg => {
+                const baseDiceAvg = this.parseDiceNotation(scaledDmg.baseDice);
+                const imbueThreshold = 7; // Fixed threshold
+                const addDicePerThreshold = 1; // Fixed additional dice
+
+                let additionalDiceAvg = 0;
+                const scalingPercent = (scaledDmg.scalingPercent || 100) / 100;
+                const powerMultiplier = 1 + (meleePower * scalingPercent / 100);
+
+                if (scaledDmg.enableScaling) {
+                    // How many times the threshold is met determines how many bonus dice are added.
+                    const numAdditionalDice = Math.floor(imbueDiceCount / imbueThreshold) * addDicePerThreshold;
+                    
+                    // This is for the UI display. It should just be the number of dice added.
+                    totalAddedScaledDice += numAdditionalDice;
+
+                    if (numAdditionalDice > 0) {
+                        addedDiceBreakdown.push(numAdditionalDice);
+                    }
+                    
+                    // For damage calculation, we need the average of a single die of the specified type.
+                    const baseDiceParts = scaledDmg.baseDice.toLowerCase().split('d');
+                    if (baseDiceParts.length === 2) {
+                        const dieType = baseDiceParts[1];
+                        const singleDieAvg = this.parseDiceNotation(`1d${dieType}`);
+                        additionalDiceAvg = numAdditionalDice * singleDieAvg;
+                    }
+                }
+                // The total average from the dice rolls, which is then scaled by power.
+                const totalDiceAverage = baseDiceAvg + additionalDiceAvg;
+                const lineResult = (totalDiceAverage * powerMultiplier) * scaledDmg.procChance;
+                totalAvgScaledDiceDmg += lineResult;
+
+                // Build the text for this specific source
+                let breakdown = `(${baseDiceAvg.toFixed(2)} (base) + ${additionalDiceAvg.toFixed(2)} (imbue)) * ${powerMultiplier.toFixed(2)} (power) * ${scaledDmg.procChance.toFixed(2)} (proc) = ${lineResult.toFixed(2)}`;
+                scaledDiceBreakdownText.push(breakdown); 
+            });
+
+            const finalScaledDiceBreakdown = scaledDiceBreakdownText.join(' +<br>');
+
+            return { baseDmg, weaponPortion, seekerPortion, sneakDiceDmg, sneakPortion, imbueDice, imbuePortion, powerForImbue, totalAvgScaledDiceDmg, addedDiceBreakdown, finalScaledDiceBreakdown };
         }
 
         /**
@@ -397,16 +469,26 @@ document.addEventListener('DOMContentLoaded', () => {
                 (weaponPortion * grazePercent * probabilities.graze);
 
             const avgSneakDmg = sneakPortion * (1 - probabilities.miss);
-            const avgImbueDmg = imbuePortion * (probabilities.hit + (imbueCrits ? probabilities.crit : 0));
+            const avgImbueDmg = imbuePortion * (probabilities.hit + (imbueCrits ? probabilities.crit : 0)); // Applies on hit, and extra on crit if checked
 
-            const avgUnscaledNormal = ((unscaled.normal_multi * multiStrikeMultiplier) + unscaled.normal_noMulti) * probabilities.hit * reaperMultiplier;
-            const avgUnscaledCrit = (((unscaled.crit_multi * multiStrikeMultiplier) + unscaled.crit_noMulti) * reaperMultiplier) * probabilities.crit;
+            // Correctly calculate unscaled damage based on probabilities
+            const unscaledNormalPortion = (unscaled.normal_multi * multiStrikeMultiplier) + unscaled.normal_noMulti;
+            const unscaledCritPortion = (unscaled.crit_multi * multiStrikeMultiplier) + unscaled.crit_noMulti;
+
+            const avgUnscaledDmg =
+                (unscaledNormalPortion * probabilities.hit) + // Normal unscaled damage on any non-graze, non-miss hit
+                (unscaledCritPortion * probabilities.crit);   // "On Crit" unscaled damage only on crits
+
+            // Correctly calculate scaled dice damage based on probabilities
+            // It applies on any normal or critical hit, but not on grazes or misses.
+            const avgScaledDiceDmg = portions.totalAvgScaledDiceDmg * probabilities.hit;
 
             return {
                 base: avgBaseHitDmg * multiStrikeMultiplier * reaperMultiplier,
                 sneak: avgSneakDmg * multiStrikeMultiplier * reaperMultiplier,
                 imbue: avgImbueDmg * multiStrikeMultiplier * reaperMultiplier,
-                unscaled: avgUnscaledNormal + avgUnscaledCrit,
+                unscaled: avgUnscaledDmg * reaperMultiplier, // Apply reaper penalty at the end
+                scaledDice: avgScaledDiceDmg * multiStrikeMultiplier * reaperMultiplier,
                 reaperMultiplier,
                 multiStrikeMultiplier
             };
@@ -423,6 +505,7 @@ document.addEventListener('DOMContentLoaded', () => {
             this.avgSneakDamageSpan.textContent = averages.sneak.toFixed(2);
             this.avgImbueDamageSpan.textContent = averages.imbue.toFixed(2);
             this.avgUnscaledDamageSpan.textContent = averages.unscaled.toFixed(2);
+            this.avgScaledDiceDamageSpan.textContent = averages.scaledDice.toFixed(2);
             this.totalAvgDamageSpan.textContent = this.totalAverageDamage.toFixed(2);
 
             const { baseDmg, sneakDiceDmg, sneakPortion, imbueDice, imbuePortion, powerForImbue } = portions;
@@ -431,7 +514,16 @@ document.addEventListener('DOMContentLoaded', () => {
             this.weaponScalingSpan.textContent = `${baseDmg.toFixed(2)} * (1 + (${meleePower} / 100)) = ${portions.weaponPortion.toFixed(2)}`;
             this.sneakScalingSpan.textContent = `(${sneakDiceDmg.toFixed(2)} + ${sneakBonusDmg.toFixed(2)}) * (1 + (${meleePower} * 1.5) / 100) = ${sneakPortion.toFixed(2)}`;
             this.imbueScalingBreakdownSpan.textContent = `${imbueDice.toFixed(2)} * (1 + (${powerForImbue} * ${imbueScaling * 100}%) / 100) = ${imbuePortion.toFixed(2)}`;
+            this.scaledDiceScalingBreakdownSpan.innerHTML = portions.finalScaledDiceBreakdown || '0';
             this.imbuePowerSourceSpan.textContent = imbueUsesSpellpower ? `Spell Power (${spellPower})` : `Melee Power (${meleePower})`;
+            this.scaledDiceAddedInputDisplaySpan.textContent = portions.totalAddedScaledDice;
+            
+            if (portions.addedDiceBreakdown && portions.addedDiceBreakdown.length > 0) {
+                this.scaledDiceAddedInputDisplaySpan.textContent = portions.addedDiceBreakdown.join(' + ');
+            } else {
+                this.scaledDiceAddedInputDisplaySpan.textContent = '0';
+            }
+
             this.reaperPenaltySpan.textContent = `${((1 - averages.reaperMultiplier) * 100).toFixed(1)}% Reduction`;
         }
 
@@ -453,13 +545,13 @@ document.addEventListener('DOMContentLoaded', () => {
             this.totalAvgSneakDmg = averages.sneak;
             this.totalAvgImbueDmg = averages.imbue;
             this.totalAvgUnscaledDmg = averages.unscaled;
+            this.totalAvgScaledDiceDmg = averages.scaledDice;
 
             // Calculate the grand total average damage
-            this.totalAverageDamage = this.totalAvgBaseHitDmg + this.totalAvgSneakDmg + this.totalAvgImbueDmg + this.totalAvgUnscaledDmg;
+            this.totalAverageDamage = this.totalAvgBaseHitDmg + this.totalAvgSneakDmg + this.totalAvgImbueDmg + this.totalAvgUnscaledDmg + this.totalAvgScaledDiceDmg;
 
             // 6. Update the UI with all the calculated values
             this._updateSummaryUI(averages, portions, inputs);
-
             // 7. Update the per-roll breakdown table
             const critStartRoll = 21 - inputs.threatRange;
             const finalCritMult1920 = inputs.critMult + inputs.critMult1920;
@@ -480,7 +572,7 @@ document.addEventListener('DOMContentLoaded', () => {
          * Populates the results table with damage for each d20 roll.
          */
         updateRollDamageTable(params) {
-            const { missThreshold, grazeThreshold, critStartRoll, weaponPortion, seekerPortion, sneakPortion, imbuePortion, imbueCrits, grazePercent, critMult, finalCritMult1920, multiStrikeMultiplier, reaperMultiplier, unscaled_normal_multi, unscaled_normal_noMulti, unscaled_crit_multi, unscaled_crit_noMulti } = params;
+            const { missThreshold, grazeThreshold, critStartRoll, weaponPortion, seekerPortion, sneakPortion, imbuePortion, imbueCrits, grazePercent, critMult, finalCritMult1920, multiStrikeMultiplier, reaperMultiplier, unscaled_normal_multi, unscaled_normal_noMulti, unscaled_crit_multi, unscaled_crit_noMulti, scaledDice } = params;
             // Clear any existing rows from the table
             this.rollDamageTbody.innerHTML = '';
 
@@ -531,7 +623,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (outcome === 'Critical') {
                     finalUnscaled += (((unscaled_crit_multi * multiStrikeMultiplier) + unscaled_crit_noMulti) * reaperMultiplier);
                 }
-                const totalDamage = finalBase + finalSneak + finalImbue + finalUnscaled;
+
+                let finalScaledDice = 0;
+                if (outcome !== 'Miss' && outcome !== 'Graze') {
+                    finalScaledDice = scaledDice * multiStrikeMultiplier * reaperMultiplier;
+                }
+                const totalDamage = finalBase + finalSneak + finalImbue + finalUnscaled + finalScaledDice;
 
                 // Create row and cells programmatically to prevent XSS.
                 const row = document.createElement('tr');
@@ -550,6 +647,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 row.appendChild(createCell(finalSneak.toFixed(2)));
                 row.appendChild(createCell(finalImbue.toFixed(2)));
                 row.appendChild(createCell(finalUnscaled.toFixed(2)));
+                row.appendChild(createCell(finalScaledDice.toFixed(2)));
                 row.appendChild(createCell(totalDamage.toFixed(2)));
                 row.appendChild(createCell(outcome));
 
@@ -646,51 +744,102 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             });
 
-        }
+            // Listener for adding a new scaled dice damage row
+            this.addScaledDiceRowBtn.addEventListener('click', (e) => this.addScaledDiceDamageRow(e));
 
-        addUnscaledDamageRow(e) {
-            e.preventDefault(); // Prevent any default button behavior
-
-            // Find the highest existing row number to avoid ID conflicts after removals
-            let maxRowId = 0;
-            this.unscaledRowsContainer.querySelectorAll('.input-group-row').forEach(row => {
-                const firstInput = row.querySelector('input[id^="unscaled-damage-"]');
-                if (firstInput) {
-                    const idNum = parseInt(firstInput.id.match(/unscaled-damage-(\d+)/)[1], 10);
-                    if (idNum > maxRowId) {
-                        maxRowId = idNum;
-                    }
+            // Use event delegation for remove buttons within the scaled dice container
+            this.scaledDiceRowsContainer.addEventListener('click', (e) => {
+                if (e.target && e.target.classList.contains('remove-row-btn')) {
+                    e.preventDefault();
+                    e.target.closest('.input-group-row').remove();
+                    this.handleInputChange();
                 }
             });
-            const newRowId = maxRowId + 1;
-
-            const newRow = document.createElement('div');
-            newRow.className = 'input-group-row';
-            newRow.innerHTML = `
-            <label for="unscaled-damage-${newRowId}${this.idSuffix}">Unscaled Damage ${newRowId}</label>
-            <input type="text" id="unscaled-damage-${newRowId}${this.idSuffix}" value="0" title="Additional source of unscaled damage" class="adaptive-text-input">
-            <label for="unscaled-proc-chance-${newRowId}${this.idSuffix}" class="short-label">Proc %</label><input type="number" id="unscaled-proc-chance-${newRowId}${this.idSuffix}" value="100" min="0" max="100" class="small-input adaptive-text-input" title="Chance for this damage to occur on a hit">
-            <input type="checkbox" id="unscaled-doublestrike-${newRowId}${this.idSuffix}" checked><label for="unscaled-doublestrike-${newRowId}${this.idSuffix}" class="inline-checkbox-label" title="Should this damage scale with Doublestrike/Doubleshot?">Multi-Strike</label>
-            <input type="checkbox" id="unscaled-on-crit-${newRowId}${this.idSuffix}"><label for="unscaled-on-crit-${newRowId}${this.idSuffix}" class="inline-checkbox-label" title="Should this damage only apply on a critical hit?">On Crit</label>
-            <button class="remove-row-btn" title="Remove this damage source">&times;</button>                
-        `;
-
-            this.unscaledRowsContainer.appendChild(newRow);
-
-            // Trigger initial sizing for newly added adaptive inputs
-            newRow.querySelectorAll('.adaptive-text-input').forEach(input => this._resizeInput(input));
         }
-
-        removeEventListeners() {
-            // Remove listeners from all inputs
+        removeEventListeners() { // Remove listeners from all inputs
             const calculatorElement = document.getElementById(`calculator-set-${this.setId}`);
             if (calculatorElement) {
-                const allInputs = calculatorElement.querySelectorAll('input');
                 // Event listeners are on the container, which gets removed, so no need to manually remove them.
             }
             // With event delegation, we don't need to remove listeners from individual inputs.
             // The listeners are on the container, which gets removed from the DOM entirely
             // when a set is deleted, cleaning up the listeners automatically.
+        }
+
+        addUnscaledDamageRow(event) {
+            event.preventDefault();
+            const newIndex = Date.now(); // Use a timestamp for a unique ID to prevent collisions
+            const idSuffix = this.idSuffix;
+        
+            // Clone the template content
+            const template = document.getElementById('unscaled-row-template');
+            if (!template) {
+                console.error("Unscaled row template not found!");
+                return;
+            }
+            const newRow = template.content.cloneNode(true).firstElementChild;
+        
+            // Find the next available number for the label
+            const existingRows = this.unscaledRowsContainer.querySelectorAll('.input-group-row');
+            const nextLabelNumber = existingRows.length + 1;
+        
+            // Update IDs and 'for' attributes to be unique
+            newRow.querySelectorAll('[id*="-X"]').forEach(el => {
+                el.id = el.id.replace('-X', `-${newIndex}${idSuffix}`);
+            });
+            newRow.querySelectorAll('[for*="-X"]').forEach(label => {
+                label.setAttribute('for', label.getAttribute('for').replace('-X', `-${newIndex}${idSuffix}`));
+            });
+        
+            // Update the main label text
+            const mainLabel = newRow.querySelector('label[for^="unscaled-damage-"]');
+            mainLabel.textContent = `Unscaled Damage ${nextLabelNumber}`;
+        
+            this.unscaledRowsContainer.appendChild(newRow);
+        
+            // Initialize adaptive sizing for the new inputs
+            newRow.querySelectorAll('.adaptive-text-input').forEach(input => this._resizeInput(input));
+        }
+
+        addScaledDiceDamageRow(event) {
+            event.preventDefault();
+            const newIndex = Date.now(); // Use a timestamp for a unique ID
+            const idSuffix = this.idSuffix;
+
+            const newRow = document.createElement('div');
+            newRow.className = 'input-group-row';
+            newRow.innerHTML = `
+                <input type="checkbox" id="scaled-dice-enabled-${newIndex}${idSuffix}" checked title="Enable/disable this scaled dice source.">
+                <label for="scaled-dice-base-${newIndex}${idSuffix}">Base Dice</label>
+                <input type="text" id="scaled-dice-base-${newIndex}${idSuffix}" value="1d6" class="adaptive-text-input">
+
+                <label for="scaled-dice-proc-chance-${newIndex}${idSuffix}" class="short-label">Proc %</label>
+                <input type="number" id="scaled-dice-proc-chance-${newIndex}${idSuffix}" value="100" min="0" max="100" class="small-input adaptive-text-input" title="Chance for this damage to occur on a hit">
+
+                <label for="scaled-dice-scaling-percent-${newIndex}${idSuffix}" class="short-label">Scaling %</label>
+                <input type="number" id="scaled-dice-scaling-percent-${newIndex}${idSuffix}" value="100" class="small-input" title="Percentage of Melee/Ranged Power to apply to this damage source.">
+                
+                <input type="checkbox" id="scaled-dice-scaling-toggle-${newIndex}${idSuffix}" checked>
+                <label for="scaled-dice-scaling-toggle-${newIndex}${idSuffix}" class="inline-checkbox-label" title="Enable scaling with imbue dice count.">Scale with Imbue</label>
+                
+                <button class="remove-row-btn" title="Remove this damage source">&times;</button>
+            `;
+
+            this.scaledDiceRowsContainer.appendChild(newRow);
+
+            // Manually trigger a change event so the new row is calculated and saved.
+            const changeEvent = new Event('change', { bubbles: true });
+            newRow.querySelector('input').dispatchEvent(changeEvent);
+
+            // Initialize adaptive sizing for the new input
+            newRow.querySelectorAll('.adaptive-text-input').forEach(input => this._resizeInput(input));
+
+            // Add a dummy action to the undo stack if needed, or just save state
+            const action = {
+                type: 'ADD_SCALED_ROW',
+                setId: this.setId
+            };
+            this.handleInputChange(action);
         }
 
         getState() {
@@ -704,6 +853,45 @@ document.addEventListener('DOMContentLoaded', () => {
                     state[key] = input.value;
                 }
             });
+
+            // Store unscaled damage rows
+            state.unscaledDamageRows = [];
+            this.unscaledRowsContainer.querySelectorAll('.input-group-row').forEach(row => {
+                const dmgInput = row.querySelector(`input[id^="unscaled-damage-"]`);
+                const procInput = row.querySelector(`input[id^="unscaled-proc-chance-"]`);
+                const multiStrikeCheckbox = row.querySelector(`input[id^="unscaled-doublestrike-"]`);
+                const onCritCheckbox = row.querySelector(`input[id^="unscaled-on-crit-"]`);
+
+                if (dmgInput && procInput && multiStrikeCheckbox && onCritCheckbox) {
+                    state.unscaledDamageRows.push({
+                        damage: dmgInput.value,
+                        procChance: procInput.value,
+                        doublestrike: multiStrikeCheckbox.checked,
+                        onCrit: onCritCheckbox.checked
+                    });
+                }
+            });
+
+
+            // Store scaled dice damage rows
+            state.scaledDiceDamageRows = [];
+            this.scaledDiceRowsContainer.querySelectorAll('.input-group-row').forEach(row => {
+                const baseDiceInput = row.querySelector(`input[id^="scaled-dice-base-"]`);
+                const scalingToggle = row.querySelector(`input[id^="scaled-dice-scaling-toggle-"]`);
+                const scalingPercentInput = row.querySelector(`input[id^="scaled-dice-scaling-percent-"]`);
+                const enabledCheckbox = row.querySelector(`input[id^="scaled-dice-enabled-"]`);
+                const procChanceInput = row.querySelector(`input[id^="scaled-dice-proc-chance-"]`);
+                if (baseDiceInput && scalingToggle && scalingPercentInput && enabledCheckbox && procChanceInput) {
+                    state.scaledDiceDamageRows.push({
+                        baseDice: baseDiceInput.value,
+                        enableScaling: scalingToggle.checked,
+                        procChance: procChanceInput.value,
+                        scalingPercent: scalingPercentInput.value,
+                        isEnabled: enabledCheckbox.checked
+                    });
+                }
+            });
+
             return state;
         }
 
@@ -723,34 +911,77 @@ document.addEventListener('DOMContentLoaded', () => {
         setState(state) {
             if (!state) return;
 
-            const allInputs = document.querySelectorAll(`#calculator-set-${this.setId} input, #calculator-set-${this.setId} select`);
-            allInputs.forEach(input => {
-                const key = input.id.replace(`-set${this.setId}`, '');
-                if (!state.hasOwnProperty(key)) {
-                    // If the key isn't in the state, it might be a dynamically added row that needs creating.
-                    if (key.startsWith('unscaled-damage-')) {
-                        const rowNum = parseInt(key.match(/unscaled-damage-(\d+)/)[1], 10);
-                        // Check if this row exists. If not, create it.
-                        if (!document.getElementById(input.id)) {
-                            this.addUnscaledDamageRow(new Event('dummy')); // Pass a dummy event
-                        }
-                    } else {
-                        return; // Skip other inputs not in state
-                    }
-                }
-
-                // If the key exists in the state, apply it
-                if (input.type === 'checkbox') {
-                    input.checked = state[key];
-                } else {
-                    input.value = state[key];
+            // Clear only the dynamic rows, not the entire container.
+            // This preserves any static elements like headers or the "Dice Added" display.
+            this.unscaledRowsContainer.querySelectorAll('.input-group-row').forEach(row => row.remove());
+            this.scaledDiceRowsContainer.querySelectorAll('.input-group-row').forEach(row => {
+                // Don't remove the read-only display box
+                if (!row.classList.contains('read-only-display')) {
+                    row.remove();
                 }
             });
 
-            // After loading state, count how many unscaled rows we have and update the counter
-            const unscaledDamageKeys = Object.keys(state).filter(k => k.startsWith('unscaled-damage-'));
-            this.unscaledRowCount = unscaledDamageKeys.length;
+            const allInputs = document.querySelectorAll(`#calculator-set-${this.setId} input, #calculator-set-${this.setId} select`);
+            allInputs.forEach(input => {
+                const key = input.id.replace(`-set${this.setId}`, '');
+                if (state.hasOwnProperty(key)) {
+                    if (input.type === 'checkbox') {
+                        input.checked = state[key];
+                    } else {
+                        input.value = state[key];
+                    }
+                }
+            });
 
+            // Recreate unscaled damage rows from state
+            if (state.unscaledDamageRows) {
+                state.unscaledDamageRows.forEach(rowData => {
+                    this.addUnscaledDamageRow(new Event('dummy')); // Add a new empty row
+                    const newRow = this.unscaledRowsContainer.lastElementChild;
+                    // Find the inputs in the newly added row and set their values
+                    const idSuffix = this.idSuffix;
+                    newRow.querySelector(`input[id^="unscaled-damage-"]`).value = rowData.damage;
+                    newRow.querySelector(`input[id^="unscaled-proc-chance-"]`).value = rowData.procChance;
+                    newRow.querySelector(`input[id^="unscaled-doublestrike-"]`).checked = rowData.doublestrike;
+                    newRow.querySelector(`input[id^="unscaled-on-crit-"]`).checked = rowData.onCrit;
+                });
+            } else {
+                // If no unscaledDamageRows in state, but there were some default ones,
+                // we need to initialize them based on how many were saved implicitly.
+                // This handles cases where old saves without explicit rows still had default ones.
+                const unscaledDamageKeys = Object.keys(state).filter(k => k.startsWith('unscaled-damage-'));
+                let maxSavedUnscaledIdx = 0;
+                unscaledDamageKeys.forEach(key => {
+                    const idx = parseInt(key.match(/unscaled-damage-(\d+)/)[1], 10);
+                    if (idx > maxSavedUnscaledIdx) maxSavedUnscaledIdx = idx;
+                });
+
+                // Add default unscaled rows if they exist in the state, up to maxSavedUnscaledIdx
+                for (let i = 1; i <= maxSavedUnscaledIdx; i++) {
+                    if (state.hasOwnProperty(`unscaled-damage-${i}`)) {
+                        this.addUnscaledDamageRow(new Event('dummy'));
+                        const newRow = this.unscaledRowsContainer.lastElementChild;
+                        newRow.querySelector(`input[id^="unscaled-damage-"]`).value = state[`unscaled-damage-${i}`];
+                        newRow.querySelector(`input[id^="unscaled-proc-chance-"]`).value = state[`unscaled-proc-chance-${i}`];
+                        newRow.querySelector(`input[id^="unscaled-doublestrike-"]`).checked = state[`unscaled-doublestrike-${i}`];
+                        newRow.querySelector(`input[id^="unscaled-on-crit-"]`).checked = state[`unscaled-on-crit-${i}`];
+                    }
+                }
+            }
+
+
+            // Recreate scaled dice damage rows from state
+            if (state.scaledDiceDamageRows) {
+                state.scaledDiceDamageRows.forEach(rowData => {
+                    this.addScaledDiceDamageRow(new Event('dummy'));
+                    const newRow = this.scaledDiceRowsContainer.lastElementChild;
+                    newRow.querySelector(`input[id^="scaled-dice-base-"]`).value = rowData.baseDice;
+                    newRow.querySelector(`input[id^="scaled-dice-scaling-toggle-"]`).checked = rowData.enableScaling;
+                    newRow.querySelector(`input[id^="scaled-dice-enabled-"]`).checked = rowData.isEnabled;
+                    newRow.querySelector(`input[id^="scaled-dice-proc-chance-"]`).value = rowData.procChance || 100;
+                    newRow.querySelector(`input[id^="scaled-dice-scaling-percent-"]`).value = rowData.scalingPercent || 100;
+                });
+            }
 
             // After setting state, recalculate to update results
             this.calculateDdoDamage();
@@ -1186,13 +1417,25 @@ document.addEventListener('DOMContentLoaded', () => {
                     const unscaledCell = document.createElement('td');
                     unscaledCell.textContent = calc.totalAvgUnscaledDmg.toFixed(2);
                     row.appendChild(unscaledCell);
+
+                    const scaledCell = document.createElement('td');
+                    scaledCell.textContent = calc.totalAvgScaledDiceDmg.toFixed(2); // This is totalAvgScaledDiceDmg
+                    row.appendChild(scaledCell);
+
                 } else {
-                    // For spell calculators, add empty cells to keep the table structure
-                    for (let i = 0; i < 4; i++) {
-                        const emptyCell = document.createElement('td');
-                        emptyCell.textContent = '-';
-                        row.appendChild(emptyCell);
-                    }
+                    // For spell calculators, show relevant spell data
+                    const avgHitCell = document.createElement('td');
+                    avgHitCell.textContent = calc.averageBaseHit.toFixed(2); // Corresponds to Avg Base
+                    row.appendChild(avgHitCell);
+
+                    const avgCritCell = document.createElement('td');
+                    avgCritCell.textContent = calc.averageCritHit.toFixed(2); // Corresponds to Avg Sneak
+                    row.appendChild(avgCritCell);
+
+                    // Add empty cells for the remaining columns (Imbue, Unscaled, Scaled) to keep alignment
+                    row.appendChild(document.createElement('td')).textContent = '-'; // Avg Imbue
+                    row.appendChild(document.createElement('td')).textContent = '-'; // Avg Unscaled
+                    row.appendChild(document.createElement('td')).textContent = '-'; // Avg Scaled
                 }
 
                 this.comparisonTbody.appendChild(row);

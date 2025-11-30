@@ -445,15 +445,12 @@ class SpellCalculator {
 
                     // If additional scalings were saved, add the inputs and set their values
                     if (source.additionalScalings && source.additionalScalings.length > 0) {
-                        source.additionalScalings.forEach((scalingValue) => {
-                            // Ensure scalingValue is not empty before adding
-                            if (scalingValue && scalingValue !== '') {
-                                this._addAdditionalScalingInput(newRow); // Add input elements
-                                // Find the last added additional scaling input and set its value
-                                const additionalScalingInputs = newRow.querySelectorAll('input[id^="additional-scaling-"]');
-                                if (additionalScalingInputs.length > 0) {
-                                    additionalScalingInputs[additionalScalingInputs.length - 1].value = scalingValue;
-                                }
+                        source.additionalScalings.forEach((scalingValue, scalingIndex) => {
+                            if (scalingValue) {
+                                this._addAdditionalScalingInput(newRow); // Add a new input field
+                                const allScalingInputs = newRow.querySelectorAll('input[id^="additional-scaling-"]');
+                                const newScalingInput = allScalingInputs[scalingIndex]; // Get the specific input we just added
+                                if (newScalingInput) newScalingInput.value = scalingValue;
                             }
                         });
                     }

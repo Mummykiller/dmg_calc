@@ -47,6 +47,7 @@
                         <th>Avg Sneak</th>
                         <th>Avg Imbue</th>
                         <th>Avg Unscaled</th>
+                        <th>Avg Scaled</th>
                     </tr>
                 </thead>
                 <tbody id="comparison-tbody"></tbody>
@@ -186,6 +187,17 @@
                         Unscaled Damage</button>
                 </div>
                 <div class="stats-group">
+                    <div id="scaled-dice-rows-container">
+                        <label>Scaled Dice Damage (e.g., base 7d77, +1 die per 7 imbue bonus)</label>
+                        <div class="input-group-row read-only-display">
+                            <label style="white-space: nowrap;">Dice Added from Imbue:</label>
+                            <span id="scaled-dice-added-input-display">0</span>
+                        </div>
+                        <!-- Scaled dice rows will be dynamically added here -->
+                    </div>
+                    <button id="add-scaled-dice-row-btn" class="small-btn" style="width: auto; margin-top: 0.5rem;">Add Scaled Dice</button>
+                </div>
+                <div class="stats-group">
                     <div class="input-group-row"><label for="doublestrike">Multi-Strike (%)</label><input type="number"
                             id="doublestrike" value="0" min="0" class="small-input"><input type="checkbox"
                             id="is-doubleshot"><label for="is-doubleshot" class="checkbox-label">Is Doubleshot</label>
@@ -262,6 +274,7 @@
                         <p><strong>Total Avg Sneak Attack:</strong> <span id="avg-sneak-damage">0</span></p>
                         <p><strong>Total Avg Imbue:</strong> <span id="avg-imbue-damage">0</span></p>
                         <p><strong>Total Avg Unscaled:</strong> <span id="avg-unscaled-damage">0</span></p>
+                        <p><strong>Total Avg Scaled Dice:</strong> <span id="avg-scaled-dice-damage">0</span></p>
                         <p class="total-damage-summary"><strong>Total Average Damage:</strong> <span
                                 id="total-avg-damage">0</span></p>
                     </div>
@@ -270,6 +283,7 @@
                         <p><strong>Weapon Scaling:</strong> <span id="weapon-scaling">0</span></p>
                         <p><strong>Sneak Scaling:</strong> <span id="sneak-scaling">0</span></p>
                         <p><strong>Imbue Scaling:</strong> <span id="imbue-scaling-breakdown">0</span></p>
+                        <p><strong>Scaled Dice Scaling:</strong> <span id="scaled-dice-scaling-breakdown">0</span></p>
                         <p><strong>Imbue Power:</strong> <span id="imbue-power-source">0</span></p>
                         <p><strong>Reaper Penalty:</strong> <span id="reaper-penalty">0.0%</span></p>
 
@@ -284,6 +298,7 @@
                                     <th>Sneak</th>
                                     <th>Imbue</th>
                                     <th>Unscaled</th>
+                                    <th>Scaled Dice</th>
                                     <th>Sum</th>
                                     <th>Outcome</th>
                                 </tr>
@@ -384,6 +399,24 @@
             </div>
         </div>
     </template>
+
+    <!-- Template for a single unscaled damage row -->
+    <template id="unscaled-row-template">
+        <div class="input-group-row">
+            <label for="unscaled-damage-X">Unscaled Damage X</label>
+            <input type="text" id="unscaled-damage-X" value="0" title="Additional source of unscaled damage"
+                class="adaptive-text-input">
+            <label for="unscaled-proc-chance-X" class="short-label">Proc %</label>
+            <input type="number" id="unscaled-proc-chance-X" value="100" min="0" max="100"
+                class="small-input adaptive-text-input" title="Chance for this damage to occur on a hit">
+            <input type="checkbox" id="unscaled-doublestrike-X" checked><label for="unscaled-doublestrike-X"
+                class="inline-checkbox-label" title="Should this damage scale with Doublestrike/Doubleshot?">Multi-Strike</label>
+            <input type="checkbox" id="unscaled-on-crit-X"><label for="unscaled-on-crit-X" class="inline-checkbox-label"
+                title="Should this damage only apply on a critical hit?">On Crit</label>
+            <button class="remove-row-btn" title="Remove this damage source">&times;</button>
+        </div>
+    </template>
+
 
     <!-- Link to the JavaScript file at the end of the body -->
     <script src="SpellCalculator.js"></script>
