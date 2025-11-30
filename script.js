@@ -840,7 +840,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             // Get the state of the currently active set to copy it
             const activeCalc = this.calculators.get(this.activeSetId);
-            const stateToCopy = (setIdToUse === null && activeCalc) ? activeCalc.getState() : null; // Only copy state if creating a new set from an existing one
+            const stateToCopy = (setIdToUse === null && activeCalc instanceof Calculator) ? activeCalc.getState() : null; // Only copy state if creating a new set from an existing one
 
             let newSetId;
             if (setIdToUse !== null) {
@@ -919,6 +919,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 return;
             }
 
+            const activeCalc = this.calculators.get(this.activeSetId);
+            const stateToCopy = (setIdToUse === null && activeCalc instanceof SpellCalculator) ? activeCalc.getState() : null;
+
             let newSetId;
             if (setIdToUse !== null) {
                 newSetId = setIdToUse;
@@ -949,6 +952,11 @@ document.addEventListener('DOMContentLoaded', () => {
             this.navContainer.insertBefore(tab, this.addSetBtn);
 
             this.calculators.set(newSetId, new SpellCalculator(newSetId, this, `Spell Set ${newSetId}`));
+            const newCalc = this.calculators.get(newSetId);
+
+            if (stateToCopy && newCalc) {
+                newCalc.setState(stateToCopy);
+            }
 
             this.switchToSet(newSetId);
             if (!this.isLoading) {
@@ -1071,8 +1079,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 this.recordAction({ type: 'REMOVE_SET', setId, state, index });
             }
 
-            if (calcToRemove instanceof Calculator) {
-                calcToRemove?.removeEventListeners();
+            if (calcToRemove && typeof calcToRemove.removeEventListeners === 'function') {
+                calcToRemove.removeEventListeners();
             }
             this.calculators.delete(setId);
 

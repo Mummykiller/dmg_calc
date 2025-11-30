@@ -93,6 +93,11 @@ class SpellCalculator {
         }
     }
 
+    removeEventListeners() {
+        // Event listeners are on the container, which gets removed, 
+        // so no specific removal is needed here with the current event delegation model.
+    }
+
     _resizeInput(inputElement) {
         // Apply relevant styles from the input to the measurement span
         const computedStyle = window.getComputedStyle(inputElement);
@@ -368,6 +373,8 @@ class SpellCalculator {
         // Store spell damage rows separately
         const spellDamageSourcesState = [];
         this.spellDamageRowsContainer.querySelectorAll('.input-group-row').forEach((row) => {
+            const spellNameInput = row.querySelector('input[id^="spell-name-"]');
+            const baseDmgInput = row.querySelector('input[id^="spell-damage-"]');
             const clScalingInput = row.querySelector('input[id^="spell-cl-scaling-"]');
             const casterLevelInput = row.querySelector('input[id^="caster-level-"]');
 
