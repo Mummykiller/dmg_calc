@@ -833,7 +833,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
 
-        addNewSet(setIdToUse = null) {
+        addNewSet(setIdToUse = null, index = -1) {
             if (this.calculators.size >= 6) {
                 alert("You have reached the maximum of 6 weapon sets.");
                 return;
@@ -862,31 +862,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 newSetId = this.findNextAvailableId();
             }
 
-            /*
-             * ===================================================================================
-             *   ** FIX FOR DYNAMIC SET CREATION **
-             *
-             *   PREVIOUS ISSUE: Cloning was done using the .outerHTML of the first set.
-             *   This included the container div ('<div id="calculator-set-1">...</div>').
-             *   The ID replacement logic would then incorrectly create a new container with an ID like
-             *   "calculator-set-set2" instead of the expected "calculator-set-2". This caused
-             *   all subsequent DOM lookups for the new set to fail, making it unresponsive.
-             *
-             *   THE FIX:
-             *   The current implementation correctly uses the .innerHTML of the template, which excludes the container.
-             *   A new container 'div' is created programmatically, and its ID is set explicitly. This ensures
-             *   that new sets have the correct structure and IDs, allowing them to be managed properly.
-             * ===================================================================================
-            */
-
             // Get the inner HTML of the template set (calculator-set-1)
             const templateNode = document.getElementById('calculator-set-template').content.cloneNode(true);
 
             // Replace IDs and 'for' attributes within the inner HTML
-            // Use a more specific regex to avoid accidentally modifying class names that contain "id=".
             let modifiedInnerHtml = templateNode.firstElementChild.outerHTML.replace(/\s(id)="([^"]+)"/g, (match, attr, id) => {
-                // For inner elements, the original ID (e.g., "weapon-dice") is the base ID.
-                // We just append the newSetId suffix.
                 return ` id="${id}-set${newSetId}"`;
             });
             modifiedInnerHtml = modifiedInnerHtml.replace(/for="([^"]+)"/g, (match, id) => {
@@ -899,12 +879,23 @@ document.addEventListener('DOMContentLoaded', () => {
             newSetContainer.className = 'calculator-container calculator-set'; // Copy classes from template
             newSetContainer.innerHTML = modifiedInnerHtml; // Set the modified inner HTML
 
-            // Append the new container to the DOM
-            this.setsContainer.appendChild(newSetContainer);
+            // Append the new container to the DOM at the correct index
+            const allContainers = this.setsContainer.querySelectorAll('.calculator-set');
+            if (index !== -1 && index < allContainers.length) {
+                this.setsContainer.insertBefore(newSetContainer, allContainers[index]);
+            } else {
+                this.setsContainer.appendChild(newSetContainer);
+            }
 
-            // Create and add the new tab
+            // Create and add the new tab at the correct index
             const tab = this.createTab(newSetId);
-            this.navContainer.insertBefore(tab, this.addSetBtn);
+            const allTabs = this.navContainer.querySelectorAll('.nav-tab');
+            if (index !== -1 && index < allTabs.length) {
+                this.navContainer.insertBefore(tab, allTabs[index]);
+            } else {
+                const firstButton = this.navContainer.querySelector('.nav-action-btn');
+                this.navContainer.insertBefore(tab, firstButton || null);
+            }
 
             this.calculators.set(newSetId, new Calculator(newSetId, this, `Set ${newSetId}`));
             const newCalc = this.calculators.get(newSetId);
@@ -921,7 +912,7 @@ document.addEventListener('DOMContentLoaded', () => {
             this.updateComparisonTable();
         }
 
-        addNewSpellSet(setIdToUse = null) {
+        addNewSpellSet(setIdToUse = null, index = -1) {
             if (this.calculators.size >= 6) {
                 alert("You have reached the maximum of 6 sets.");
                 return;
@@ -954,10 +945,25 @@ document.addEventListener('DOMContentLoaded', () => {
             newSetContainer.className = 'calculator-container calculator-set';
             newSetContainer.innerHTML = modifiedInnerHtml;
 
-            this.setsContainer.appendChild(newSetContainer); // Add this line
+            // Append the new container to the DOM at the correct index
+            const allContainers = this.setsContainer.querySelectorAll('.calculator-set');
+            if (index !== -1 && index < allContainers.length) {
+                this.setsContainer.insertBefore(newSetContainer, allContainers[index]);
+            } else {
+                this.setsContainer.appendChild(newSetContainer);
+            }
+
+            // Create and add the new tab at the correct index
             const tab = this.createTab(newSetId);
             tab.classList.add('spell-tab-indicator');
-            this.navContainer.insertBefore(tab, this.addSetBtn);
+            const allTabs = this.navContainer.querySelectorAll('.nav-tab');
+            if (index !== -1 && index < allTabs.length) {
+                this.navContainer.insertBefore(tab, allTabs[index]);
+            } else {
+                const firstButton = this.navContainer.querySelector('.nav-action-btn');
+                this.navContainer.insertBefore(tab, firstButton || null);
+            }
+
 
             this.calculators.set(newSetId, new SpellCalculator(newSetId, this, `Spell Set ${newSetId}`));
             const newCalc = this.calculators.get(newSetId);
@@ -1051,9 +1057,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
         recreateSet(setId, state, index) {
             if (state.type === 'spell') {
-                this.addNewSpellSet(setId);
+                this.addNewSpellSet(setId, index);
             } else {
-                this.addNewSet(setId);
+                this.addNewSet(setId, index);
             }
             const newCalc = this.calculators.get(setId);
             if (newCalc) {
@@ -1082,6 +1088,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (!isLoading) {
                 const state = calcToRemove.getState();
                 state.tabName = calcToRemove.getTabName();
+                state.type = calcToRemove instanceof SpellCalculator ? 'spell' : 'weapon';
                 const tabs = [...this.navContainer.querySelectorAll('.nav-tab')];
                 const index = tabs.findIndex(tab => parseInt(tab.dataset.set, 10) === setId);
 
