@@ -291,16 +291,15 @@ document.addEventListener('DOMContentLoaded', () => {
                 crit_noMulti: 0
             };
 
-            let i = 1;
-            while (true) {
-                const dmgInput = document.getElementById(`unscaled-damage-${i}${this.idSuffix}`);
-                if (!dmgInput) break;
+            const rows = this.unscaledRowsContainer.querySelectorAll('.input-group-row');
 
-                const procInput = document.getElementById(`unscaled-proc-chance-${i}${this.idSuffix}`);
-                const multiStrikeCheckbox = document.getElementById(`unscaled-doublestrike-${i}${this.idSuffix}`);
-                const onCritCheckbox = document.getElementById(`unscaled-on-crit-${i}${this.idSuffix}`);
+            rows.forEach(row => {
+                const dmgInput = row.querySelector(`input[id^="unscaled-damage-"]`);
+                const procInput = row.querySelector(`input[id^="unscaled-proc-chance-"]`);
+                const multiStrikeCheckbox = row.querySelector(`input[id^="unscaled-doublestrike-"]`);
+                const onCritCheckbox = row.querySelector(`input[id^="unscaled-on-crit-"]`);
 
-                if (procInput && multiStrikeCheckbox && onCritCheckbox) {
+                if (dmgInput && procInput && multiStrikeCheckbox && onCritCheckbox) {
                     const damage = this.parseDiceNotation(dmgInput.value);
                     const procChance = (parseFloat(procInput.value) || 100) / 100;
                     const averageDamage = damage * procChance;
@@ -313,8 +312,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         else unscaled.normal_noMulti += averageDamage;
                     }
                 }
-                i++;
-            }
+            });
             return unscaled;
         }
 
