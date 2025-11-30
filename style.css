@@ -190,20 +190,11 @@ body /* The main content area of the entire webpage. */ {
 }
 
 /* --- Drag and Drop Styles --- */
-.nav-tab.dragging /* Controls how a navigation tab looks ONLY when you are dragging it to rearrange tabs. */ {
-    opacity: 0.5;
-}
-
-.nav-tab.drag-over-indicator /* Shows a line next to a navigation tab ONLY when you are dragging another tab over it, indicating where it will be dropped. */ {
-    /* Add a line to the left of the tab to show where the dragged tab will be dropped */
-    border-left: 3px solid var(--accent-color);
-}
-
-#add-set-btn.drag-over-end-indicator /* Highlights the 'add new calculator' button ONLY when you are dragging a tab to the very end of the navigation list. */ {
-    border: 1px dashed var(--accent-color);
-    /* Highlight the add button */
-    background-color: rgba(var(--accent-color-rgb), 0.1);
-    /* Subtle background */
+.nav-tab.dragging /* Hides the original tab from the layout while it's being dragged. The browser shows a 'ghost' image, and a placeholder appears in its place. */ {
+    position: absolute !important;
+    left: -9999px;
+    top: -9999px;
+    opacity: 0;
 }
 
 .nav-tab-placeholder /* An empty space shown in the navigation bar ONLY when you are dragging a tab, to show where it will land. */ {

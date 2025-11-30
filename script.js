@@ -188,12 +188,22 @@ document.addEventListener('DOMContentLoaded', () => {
                     const parts = term.toLowerCase().split('d');
                     if (parts.length !== 2) continue; // Invalid format, skip
 
-                    const numDice = parseInt(parts[0], 10) || 1; // Default to 1 if missing, e.g., "d6"
+                    let numDice;
+                    if (parts[0] === '-') {
+                        numDice = -1;
+                    } else if (parts[0] === '') {
+                        numDice = 1;
+                    } else {
+                        numDice = parseInt(parts[0], 10);
+                    }
+
+                    if (isNaN(numDice)) numDice = 1; // Default for invalid strings like "ad6"
+
                     const numSides = parseFloat(parts[1]); // Use parseFloat to handle dice like 'd100' or 'd4.5' if ever needed
 
                     if (isNaN(numSides) || numSides <= 0) continue; // Invalid sides, skip
 
-                    // Average of one die is (sides + 1) / 2. Multiply by the number of dice.
+                    // Average of one die is (sides + 1) / 2. Multiply by the number of a dice.
                     totalAverage += numDice * (numSides + 1) / 2;
                 } else {
                     // If not a die roll, it's a flat number (e.g., "5" or "-2")
@@ -1063,7 +1073,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
         removeSet(setId, isLoading = false) {
             if (this.calculators.size <= 1) {
-                // Allow removing the last set.
+                alert("You cannot remove the last set.");
+                return;
             }
 
             // Clean up
@@ -1194,8 +1205,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 const target = e.target.closest('.nav-tab');
                 if (target) {
                     draggedTab = target;
-                    // Use setTimeout to allow the browser to create the drag image before we add the class
-
                     // Create placeholder
                     placeholder = document.createElement('div');
                     placeholder.className = 'nav-tab-placeholder';
@@ -1224,50 +1233,48 @@ document.addEventListener('DOMContentLoaded', () => {
                 e.preventDefault(); // This is necessary to allow a drop
                 if (!placeholder) return;
 
-                // If dragging over the 'add' button, treat it as a dead zone
-                if (e.target.closest('#add-set-btn')) {
-                    if (placeholder && placeholder.parentNode) {
-                        placeholder.parentNode.removeChild(placeholder);
-                    }
-                    return;
-                }
-
                 const afterElement = this._getDragAfterElement(this.navContainer, e.clientX);
+                const firstButton = this.navContainer.querySelector('.nav-action-btn');
 
-                if (afterElement === null) {
-                    // Insert placeholder before the 'Add Set' button
-                    this.navContainer.insertBefore(placeholder, this.addSetBtn);
-                } else {
-                    // Insert placeholder before the element we're hovering over
+                if (afterElement) {
+                    // Case 1: Hovering over another tab. Insert placeholder before it.
                     this.navContainer.insertBefore(placeholder, afterElement);
+                } else {
+                    // Case 2: Not hovering over a tab. This means we are at the end of the tab list.
+                    // Insert the placeholder before the first action button.
+                    if (firstButton) {
+                        this.navContainer.insertBefore(placeholder, firstButton);
+                    } else {
+                        this.navContainer.appendChild(placeholder); // Fallback
+                    }
                 }
-            });
-
-            this.navContainer.addEventListener('dragleave', (e) => {
-                // Note: dragleave logic is simplified as the placeholder handles visual state.
-                // We could add logic to remove the placeholder if the mouse leaves the container,
-                // but dragend will handle cleanup reliably.
             });
 
             this.navContainer.addEventListener('drop', (e) => {
                 e.preventDefault();
                 if (!draggedTab) return;
 
+                // This calculation needs to be consistent with 'dragover'
                 const afterElement = this._getDragAfterElement(this.navContainer, e.clientX);
+                const firstButton = this.navContainer.querySelector('.nav-action-btn');
                 const draggedSetId = draggedTab.dataset.set;
                 const draggedContainer = document.getElementById(`calculator-set-${draggedSetId}`);
 
-                if (afterElement == null) {
-                    // Dropping at the end
-                    this.navContainer.insertBefore(draggedTab, this.addSetBtn);
-                    this.setsContainer.appendChild(draggedContainer);
-                } else {
-                    // Dropping before another element
-                    const afterElementSetId = afterElement.dataset.set;
-                    const afterContainer = document.getElementById(`calculator-set-${afterElementSetId}`);
+                if (afterElement) {
+                    // Drop before the 'afterElement'
                     this.navContainer.insertBefore(draggedTab, afterElement);
+                    const afterContainer = document.getElementById(`calculator-set-${afterElement.dataset.set}`);
                     this.setsContainer.insertBefore(draggedContainer, afterContainer);
+                } else {
+                    // Drop at the end (before the first button)
+                    if (firstButton) {
+                        this.navContainer.insertBefore(draggedTab, firstButton);
+                    } else {
+                        this.navContainer.appendChild(draggedTab);
+                    }
+                    this.setsContainer.appendChild(draggedContainer);
                 }
+
 
                 // After reordering, ensure the active tab's class is correctly applied
                 // This handles cases where the active tab itself was dragged

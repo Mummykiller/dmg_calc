@@ -525,8 +525,18 @@ class SpellCalculator {
                 const parts = term.toLowerCase().split('d');
                 if (parts.length !== 2) continue; // Invalid format, skip
 
-                const numDice = parseInt(parts[0], 10) || 1; // Default to 1 if missing, e.g., "d6"
-                const numSides = parseFloat(parts[1]); // Use parseFloat to handle dice like 'd100' or 'd4.5' if ever needed
+                let numDice;
+                if (parts[0] === '-') {
+                    numDice = -1;
+                } else if (parts[0] === '') {
+                    numDice = 1;
+                } else {
+                    numDice = parseInt(parts[0], 10);
+                }
+
+                if (isNaN(numDice)) numDice = 1;
+
+                const numSides = parseFloat(parts[1]);
 
                 if (isNaN(numSides) || numSides <= 0) continue; // Invalid sides, skip
 
