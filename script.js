@@ -62,8 +62,10 @@ document.addEventListener('DOMContentLoaded', () => {
             // If the input is in a flex container (which .input-group-row is),
             // its max-width might be constrained by the container.
             // For now, let's cap it at a reasonable value or its parent's width.
-            const parentWidth = inputElement.closest('.input-group-row')?.clientWidth || window.innerWidth;
-            const maxWidth = parseFloat(computedStyle.maxWidth) || (parentWidth * 0.8); // 80% of parent width as a default max
+            let maxWidth = parseFloat(computedStyle.maxWidth);
+            if (isNaN(maxWidth) || maxWidth === 0) { // If CSS max-width is 'none' or '0px', use a default.
+                maxWidth = 150; // A reasonable default maximum width
+            }
 
             inputElement.style.width = `${Math.min(maxWidth, Math.max(minWidth, desiredWidth))}px`;
         }

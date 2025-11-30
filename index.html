@@ -92,7 +92,7 @@
                     <div class="input-group-row">
                         <label for="weapon-damage">Damage</label>
                         <input type="text" id="weapon-damage" value="1d10+3"
-                            title="Weapon's base damage dice + enhancement bonus">
+                            title="Weapon's base damage dice + enhancement bonus" class="adaptive-text-input">
                         <span class="plus-symbol">+</span>
                         <input type="number" id="bonus-base-damage" value="125" class="small-input"
                             title="Bonus damage that IS multiplied on a critical hit">
@@ -127,8 +127,10 @@
                             title="Rolls at or below this value (but above miss) are a graze.">Graze on Roll ≤</label>
                         <input type="number" id="graze-threshold" value="5" min="1" max="20" class="small-input">
                     </div>
-                    <label for="graze-percent">Graze Damage %</label>
-                    <input type="number" id="graze-percent" value="20" min="0" max="100" class="small-input">
+                    <div class="input-group-row">
+                        <label for="graze-percent">Graze Damage %</label>
+                        <input type="number" id="graze-percent" value="20" min="0" max="100" class="small-input">
+                    </div>
                 </div>
                 <div class="stats-group">
                     <div id="unscaled-rows-container">
@@ -137,10 +139,10 @@
                         <div class="input-group-row">
                             <label for="unscaled-damage-1">Unscaled Damage 1</label>
                             <input type="text" id="unscaled-damage-1" value="0"
-                                title="Additional source of unscaled damage">
+                                title="Additional source of unscaled damage" class="adaptive-text-input">
                             <label for="unscaled-proc-chance-1" class="short-label">Proc %</label>
                             <input type="number" id="unscaled-proc-chance-1" value="100" min="0" max="100"
-                                class="small-input" title="Chance for this damage to occur on a hit">
+                                class="small-input adaptive-text-input" title="Chance for this damage to occur on a hit">
                             <input type="checkbox" id="unscaled-doublestrike-1" checked><label
                                 for="unscaled-doublestrike-1" class="inline-checkbox-label"
                                 title="Should this damage scale with Doublestrike/Doubleshot?">Multi-Strike</label>
@@ -152,10 +154,10 @@
                         <div class="input-group-row">
                             <label for="unscaled-damage-2">Unscaled Damage 2</label>
                             <input type="text" id="unscaled-damage-2" value="0"
-                                title="Additional source of unscaled damage">
+                                title="Additional source of unscaled damage" class="adaptive-text-input">
                             <label for="unscaled-proc-chance-2" class="short-label">Proc %</label>
                             <input type="number" id="unscaled-proc-chance-2" value="100" min="0" max="100"
-                                class="small-input" title="Chance for this damage to occur on a hit">
+                                class="small-input adaptive-text-input" title="Chance for this damage to occur on a hit">
                             <input type="checkbox" id="unscaled-doublestrike-2" checked><label
                                 for="unscaled-doublestrike-2" class="inline-checkbox-label"
                                 title="Should this damage scale with Doublestrike/Doubleshot?">Multi-Strike</label>
@@ -167,10 +169,10 @@
                         <div class="input-group-row">
                             <label for="unscaled-damage-3">Unscaled Damage 3</label>
                             <input type="text" id="unscaled-damage-3" value="0"
-                                title="Additional source of unscaled damage">
+                                title="Additional source of unscaled damage" class="adaptive-text-input">
                             <label for="unscaled-proc-chance-3" class="short-label">Proc %</label>
                             <input type="number" id="unscaled-proc-chance-3" value="100" min="0" max="100"
-                                class="small-input" title="Chance for this damage to occur on a hit">
+                                class="small-input adaptive-text-input" title="Chance for this damage to occur on a hit">
                             <input type="checkbox" id="unscaled-doublestrike-3" checked><label
                                 for="unscaled-doublestrike-3" class="inline-checkbox-label"
                                 title="Should this damage scale with Doublestrike/Doubleshot?">Multi-Strike</label>
