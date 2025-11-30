@@ -31,41 +31,14 @@ document.addEventListener('DOMContentLoaded', () => {
             document.body.appendChild(this._measurementSpan);
 
             // Initialize adaptive sizing for all relevant inputs
-            this.setupAdaptiveInputs();
+            this._initializeAdaptiveInputs();
         }
 
         /**
-         * Sets up adaptive sizing for all text-based input fields in the calculator.
+         * Resizes an individual input element to fit its content.
+         * @param {HTMLInputElement} inputElement - The input element to resize.
          */
-        setupAdaptiveInputs() {
-            const inputsToAdjust = [
-                this.weaponDiceInput, this.weaponDamageInput, this.bonusBaseDamageInput,
-                this.critThreatInput, this.critMultiplierInput, this.seekerDamageInput,
-                this.critMultiplier1920Input, this.sneakAttackDiceInput, this.sneakBonusInput,
-                this.missThresholdInput, this.grazeThresholdInput, this.grazePercentInput,
-                this.imbueDiceCountInput, this.imbueDieTypeInput, this.imbueScalingInput,
-            ];
-
-            inputsToAdjust.forEach(input => {
-                if (input && input.type === 'text' || input.type === 'number') {
-                    this.adjustInputWidth(input); // Initial adjustment
-                    input.addEventListener('input', (e) => this.adjustInputWidth(e.target));
-                }
-            });
-
-            // Handle dynamically added unscaled damage inputs
-            const unscaledInputs = this.unscaledRowsContainer.querySelectorAll('input[id^="unscaled-damage-"]');
-            unscaledInputs.forEach(input => {
-                this.adjustInputWidth(input); // Initial adjustment
-                input.addEventListener('input', (e) => this.adjustInputWidth(e.target));
-            });
-        }
-
-        /**
-         * Adjusts the width of an input element to fit its content.
-         * @param {HTMLInputElement} inputElement - The input element to adjust.
-         */
-        adjustInputWidth(inputElement) {
+        _resizeInput(inputElement) {
             // Apply relevant styles from the input to the measurement span
             const computedStyle = window.getComputedStyle(inputElement);
             this._measurementSpan.style.fontFamily = computedStyle.fontFamily;
@@ -93,6 +66,35 @@ document.addEventListener('DOMContentLoaded', () => {
             const maxWidth = parseFloat(computedStyle.maxWidth) || (parentWidth * 0.8); // 80% of parent width as a default max
 
             inputElement.style.width = `${Math.min(maxWidth, Math.max(minWidth, desiredWidth))}px`;
+        }
+
+        /**
+         * Initializes adaptive sizing for all relevant inputs in the calculator.
+         * Uses event delegation for dynamically added inputs.
+         */
+        _initializeAdaptiveInputs() {
+            const calculatorElement = document.getElementById(`calculator-set-${this.setId}`);
+            if (!calculatorElement) return;
+
+            // Use event delegation for 'input' events to handle resizing
+            calculatorElement.addEventListener('input', (e) => {
+                // Only resize inputs that have the 'adaptive-text-input' class
+                if (e.target.classList.contains('adaptive-text-input')) {
+                    this._resizeInput(e.target);
+                }
+            });
+
+            // Run initial resize on all existing adaptive inputs
+            this.resizeAllAdaptiveInputs();
+        }
+
+        /**
+         * Resizes all input elements that have the 'adaptive-text-input' class.
+         */
+        resizeAllAdaptiveInputs() {
+            const calculatorElement = document.getElementById(`calculator-set-${this.setId}`);
+            if (!calculatorElement) return;
+            calculatorElement.querySelectorAll('.adaptive-text-input').forEach(input => this._resizeInput(input));
         }
 
         getElements() {
@@ -664,8 +666,8 @@ document.addEventListener('DOMContentLoaded', () => {
             newRow.className = 'input-group-row';
             newRow.innerHTML = `
             <label for="unscaled-damage-${newRowId}${this.idSuffix}">Unscaled Damage ${newRowId}</label>
-            <input type="text" id="unscaled-damage-${newRowId}${this.idSuffix}" value="0" title="Additional source of unscaled damage">
-            <label for="unscaled-proc-chance-${newRowId}${this.idSuffix}" class="short-label">Proc %</label><input type="number" id="unscaled-proc-chance-${newRowId}${this.idSuffix}" value="100" min="0" max="100" class="small-input" title="Chance for this damage to occur on a hit">
+            <input type="text" id="unscaled-damage-${newRowId}${this.idSuffix}" value="0" title="Additional source of unscaled damage" class="adaptive-text-input">
+            <label for="unscaled-proc-chance-${newRowId}${this.idSuffix}" class="short-label">Proc %</label><input type="number" id="unscaled-proc-chance-${newRowId}${this.idSuffix}" value="100" min="0" max="100" class="small-input adaptive-text-input" title="Chance for this damage to occur on a hit">
             <input type="checkbox" id="unscaled-doublestrike-${newRowId}${this.idSuffix}" checked><label for="unscaled-doublestrike-${newRowId}${this.idSuffix}" class="inline-checkbox-label" title="Should this damage scale with Doublestrike/Doubleshot?">Multi-Strike</label>
             <input type="checkbox" id="unscaled-on-crit-${newRowId}${this.idSuffix}"><label for="unscaled-on-crit-${newRowId}${this.idSuffix}" class="inline-checkbox-label" title="Should this damage only apply on a critical hit?">On Crit</label>
             <button class="remove-row-btn" title="Remove this damage source">&times;</button>                
@@ -673,8 +675,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
             this.unscaledRowsContainer.appendChild(newRow);
 
-            // Add the change listener to all new inputs in the row
-            // Event delegation on the container handles these new inputs automatically.
+            // Trigger initial sizing for newly added adaptive inputs
+            newRow.querySelectorAll('.adaptive-text-input').forEach(input => this._resizeInput(input));
         }
 
         removeEventListeners() {
