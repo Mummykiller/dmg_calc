@@ -1,4 +1,4 @@
-class SpellCalculator {
+export class SpellCalculator {
     constructor(setId, manager, name) {
         this.setId = setId;
         this.manager = manager;
