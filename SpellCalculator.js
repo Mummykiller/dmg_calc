@@ -1,3 +1,5 @@
+import { parseDiceNotation } from './utils.js';
+
 export class SpellCalculator {
     constructor(setId, manager, name) {
         this.setId = setId;
@@ -91,8 +93,7 @@ export class SpellCalculator {
                         }
                         mainRowToRemove.remove(); // Remove the main row itself
                     }
-                    this.calculateSpellDamage();
-                    this.manager.saveState();
+                    this.handleInputChange();
                 } else if (e.target && e.target.classList.contains('duplicate-row-btn')) {
                     e.preventDefault();
                     this.duplicateSpellDamageRow(e.target.closest('.spell-damage-source-row'));
@@ -388,8 +389,8 @@ export class SpellCalculator {
 
                 if (baseInput && clInput && spSelect) {
                     additionalScalings.push({
-                        base: this.parseDiceNotation(baseInput.value),
-                        clScaled: this.parseDiceNotation(clInput.value),
+                        base: parseDiceNotation(baseInput.value),
+                        clScaled: parseDiceNotation(clInput.value),
                         profileId: parseInt(spSelect.value, 10) || 1
                     });
                 }
@@ -399,8 +400,8 @@ export class SpellCalculator {
             if (spellNameInput && baseDmgInput && clScalingInput && casterLevelInput && hitCountInput) {
                 spellDamageSources.push({
                     name: spellNameInput.value || `Source ${i + 1}`,
-                    base: this.parseDiceNotation(baseDmgInput.value),
-                    clScaled: this.parseDiceNotation(clScalingInput.value),
+                    base: parseDiceNotation(baseDmgInput.value),
+                    clScaled: parseDiceNotation(clScalingInput.value),
                     casterLevel: parseInt(casterLevelInput.value) || 0,
                     hitCount: parseInt(hitCountInput.value) || 1,
                     additionalScalings: additionalScalings
@@ -547,6 +548,18 @@ export class SpellCalculator {
         // Store for comparison table - this is the final damage for ALL spells combined
         this.totalAverageDamage = totalBaseDamage;
         this.individualSpellDamages = individualSpellDamages; // Store individual results
+
+        let totalAverageBaseHit = 0;
+        let totalAverageCritHit = 0;
+        individualSpellDamages.forEach(spell => {
+            spell.components.forEach(component => {
+                totalAverageBaseHit += component.averageHit;
+                totalAverageCritHit += component.averageCrit;
+            });
+        });
+
+        this.averageBaseHit = totalAverageBaseHit;
+        this.averageCritHit = totalAverageCritHit;
 
         // Update UI
         this.avgSpellDamageSpan.textContent = totalBaseDamage.toFixed(2); // This now represents total pre-MRR average
@@ -835,69 +848,6 @@ export class SpellCalculator {
         this.updateSpellPowerSelectors();
         this.resizeAllAdaptiveInputs();
         this.calculateSpellDamage();
-    }
-
-    parseDiceNotation(diceString) {
-        // Ensure we have a string, trim whitespace
-        let cleanString = (diceString || '').trim();
-
-        if (!cleanString) {
-            return 0;
-        }
-
-        // First, find and replace all range notations (e.g., "100-300") with their average value.
-        // This prevents the '-' in a range from being treated as subtraction.
-        cleanString = cleanString.replace(/(\d+(?:\.\d+)?)-(\d+(?:\.\d+)?)/g, (match, minStr, maxStr) => {
-            const min = parseFloat(minStr);
-            const max = parseFloat(maxStr);
-            return ((min + max) / 2).toString();
-        });
-        // Standardize operators: replace all '-' with '+-' to make splitting easier
-        cleanString = cleanString.replace(/\s/g, '');
-        // Handle negative numbers at the start of the string
-        if (cleanString.startsWith('-')) {
-            cleanString = cleanString.substring(1).replace(/-/g, '+-');
-            cleanString = '-' + cleanString;
-        } else {
-            cleanString = cleanString.replace(/-/g, '+-');
-        }
-
-        // Split the string by the '+' operator to get all the terms
-        const terms = cleanString.split('+');
-
-        let totalAverage = 0;
-
-        for (const term of terms) {
-            if (!term) continue; // Skip empty terms that can result from " -5"
-
-            // Check if the term is a die roll (e.g., "2d6")
-            if (term.toLowerCase().includes('d')) {
-                const parts = term.toLowerCase().split('d');
-                if (parts.length !== 2) continue; // Invalid format, skip
-
-                let numDice;
-                if (parts[0] === '-') {
-                    numDice = -1;
-                } else if (parts[0] === '') {
-                    numDice = 1;
-                } else {
-                    numDice = parseInt(parts[0], 10);
-                }
-
-                if (isNaN(numDice)) numDice = 1;
-
-                const numSides = parseFloat(parts[1]);
-
-                if (isNaN(numSides) || numSides <= 0) continue; // Invalid sides, skip
-
-                // Average of one die is (sides + 1) / 2. Multiply by the number of dice.
-                totalAverage += numDice * (numSides + 1) / 2;
-            } else {
-                // If not a die roll, it's a flat number (e.g., "5" or "-2")
-                totalAverage += parseFloat(term) || 0;
-            }
-        }
-        return totalAverage;
     }
 
     getTabName() {

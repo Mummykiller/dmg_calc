@@ -1,3 +1,5 @@
+import { parseDiceNotation } from './utils.js';
+
 export class WeaponCalculator {
         constructor(setId, manager, name) { // Add 'name' to the constructor
             this.setId = setId;
@@ -153,75 +155,6 @@ export class WeaponCalculator {
         }
 
         /**
-         * Parses a dice notation string (e.g., "2d6") and returns its average value.
-         * Also handles flat numbers.
-         * @param {string} diceString - The string to parse, like "1d8", "3d6", or "4.5".
-         * @returns {number} The calculated average damage.
-         */
-        parseDiceNotation(diceString) {
-            // Ensure we have a string, trim whitespace
-            let cleanString = (diceString || '').trim();
-
-            if (!cleanString) {
-                return 0;
-            }
-
-            // First, find and replace all range notations (e.g., "100-300") with their average value.
-            // This prevents the '-' in a range from being treated as subtraction.
-            cleanString = cleanString.replace(/(\d+(?:\.\d+)?)-(\d+(?:\.\d+)?)/g, (match, minStr, maxStr) => {
-                const min = parseFloat(minStr);
-                const max = parseFloat(maxStr);
-                return ((min + max) / 2).toString();
-            });
-            // Standardize operators: replace all '-' with '+-' to make splitting easier
-            cleanString = cleanString.replace(/\s/g, '');
-            // Handle negative numbers at the start of the string
-            if (cleanString.startsWith('-')) {
-                cleanString = cleanString.substring(1).replace(/-/g, '+-');
-                cleanString = '-' + cleanString;
-            } else {
-                cleanString = cleanString.replace(/-/g, '+-');
-            }
-
-            // Split the string by the '+' operator to get all the terms
-            const terms = cleanString.split('+');
-
-            let totalAverage = 0;
-
-            for (const term of terms) {
-                if (!term) continue; // Skip empty terms that can result from " -5"
-
-                // Check if the term is a die roll (e.g., "2d6")
-                if (term.toLowerCase().includes('d')) {
-                    const parts = term.toLowerCase().split('d');
-                    if (parts.length !== 2) continue; // Invalid format, skip
-
-                    let numDice;
-                    if (parts[0] === '-') {
-                        numDice = -1;
-                    } else if (parts[0] === '') {
-                        numDice = 1;
-                    } else {
-                        numDice = parseInt(parts[0], 10);
-                    }
-
-                    if (isNaN(numDice)) numDice = 1; // Default for invalid strings like "ad6"
-
-                    const numSides = parseFloat(parts[1]); // Use parseFloat to handle dice like 'd100' or 'd4.5' if ever needed
-
-                    if (isNaN(numSides) || numSides <= 0) continue; // Invalid sides, skip
-
-                    // Average of one die is (sides + 1) / 2. Multiply by the number of a dice.
-                    totalAverage += numDice * (numSides + 1) / 2;
-                } else {
-                    // If not a die roll, it's a flat number (e.g., "5" or "-2")
-                    totalAverage += parseFloat(term) || 0;
-                }
-            }
-            return totalAverage;
-        }
-
-        /**
          * Parses the critical threat input, which can be a number (e.g., "5")
          * or a range (e.g., "16-20").
          * @param {string} threatString - The value from the crit threat input field.
@@ -276,7 +209,7 @@ export class WeaponCalculator {
                 const onCritCheckbox = row.querySelector(`input[id^="unscaled-on-crit-"]`);
 
                 if (dmgInput && procInput && multiStrikeCheckbox && onCritCheckbox) {
-                    const damage = this.parseDiceNotation(dmgInput.value);
+                    const damage = parseDiceNotation(dmgInput.value);
                     const procChance = (parseFloat(procInput.value) || 100) / 100;
                     const averageDamage = damage * procChance;
 
@@ -311,15 +244,15 @@ export class WeaponCalculator {
             });
 
             return {
-                additionalWeaponDice: parseInt(this.weaponDiceInput.value) || 0,
-                parsedWeaponDmg: this.parseDiceNotation(this.weaponDamageInput.value) || 0,
+                additionalWeaponDice: parseFloat(this.weaponDiceInput.value) || 0,
+                parsedWeaponDmg: parseDiceNotation(this.weaponDamageInput.value) || 0,
                 bonusBaseDmg: parseFloat(this.bonusBaseDamageInput.value) || 0,
                 meleePower: parseFloat(this.meleePowerInput.value) || 0,
                 spellPower: parseFloat(this.spellPowerInput.value) || 0,
                 threatRange: this.parseThreatRange(this.critThreatInput.value),
                 critMult: parseFloat(this.critMultiplierInput.value) || 2,
                 critMult1920: parseFloat(this.critMultiplier1920Input.value) || 0,
-                seekerDmg: this.parseDiceNotation(this.seekerDamageInput.value), // Allow dice notation for seeker
+                seekerDmg: parseDiceNotation(this.seekerDamageInput.value), // Allow dice notation for seeker
                 sneakDiceCount: parseInt(this.sneakAttackDiceInput.value) || 0,
                 sneakBonusDmg: parseFloat(this.sneakBonusInput.value) || 0,
                 missThreshold: Math.max(1, parseInt(this.missThresholdInput.value) || 1),
@@ -399,7 +332,7 @@ export class WeaponCalculator {
             let scaledDiceBreakdownText = [];
             const addedDiceBreakdown = [];
             scaledDiceDamage.forEach(scaledDmg => {
-                const baseDiceAvg = this.parseDiceNotation(scaledDmg.baseDice);
+                const baseDiceAvg = parseDiceNotation(scaledDmg.baseDice);
                 const imbueThreshold = 7; // Fixed threshold
                 const addDicePerThreshold = 1; // Fixed additional dice
 
@@ -422,7 +355,7 @@ export class WeaponCalculator {
                     const baseDiceParts = scaledDmg.baseDice.toLowerCase().split('d');
                     if (baseDiceParts.length === 2) {
                         const dieType = baseDiceParts[1];
-                        const singleDieAvg = this.parseDiceNotation(`1d${dieType}`);
+                        const singleDieAvg = parseDiceNotation(`1d${dieType}`);
                         additionalDiceAvg = numAdditionalDice * singleDieAvg;
                     }
                 }
