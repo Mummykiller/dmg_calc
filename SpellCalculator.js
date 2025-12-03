@@ -39,6 +39,7 @@ class SpellCalculator {
         this.maximizeCheckbox = get('metamagic-maximize');
         this.intensifyCheckbox = get('metamagic-intensify');
         this.wellspringCheckbox = get('boost-wellspring');
+        this.nightHorrorsCheckbox = get('boost-night-horrors');
         this.calculateBtn = get('calculate-spell-btn');
 
         // Output elements
@@ -56,7 +57,7 @@ class SpellCalculator {
         const calculatorElement = document.getElementById(`calculator-set-${this.setId}`);
         if (calculatorElement) {
             const recordChange = (e) => {
-                this.calculateSpellDamage();
+                this.handleInputChange();
                 this.manager.saveState();
             };
             calculatorElement.addEventListener('input', recordChange);
@@ -67,6 +68,7 @@ class SpellCalculator {
             this.maximizeCheckbox.addEventListener('change', recordChange);
             this.intensifyCheckbox.addEventListener('change', recordChange);
             this.wellspringCheckbox.addEventListener('change', recordChange);
+            this.nightHorrorsCheckbox.addEventListener('change', recordChange);
 
             // Add listener for adding a new spell damage row
             this.addSpellDamageRowBtn.addEventListener('click', (e) => this.addSpellDamageRow(e));
@@ -84,13 +86,16 @@ class SpellCalculator {
                         let nextSibling = mainRowToRemove.nextElementSibling;
                         while (nextSibling && nextSibling.classList.contains('additional-scaling-row')) {
                             const toRemove = nextSibling;
-                            nextSibling = nextSibling.nextElementSibling;
+                            nextSibling = toRemove.nextElementSibling;
                             toRemove.remove();
                         }
                         mainRowToRemove.remove(); // Remove the main row itself
                     }
                     this.calculateSpellDamage();
                     this.manager.saveState();
+                } else if (e.target && e.target.classList.contains('duplicate-row-btn')) {
+                    e.preventDefault();
+                    this.duplicateSpellDamageRow(e.target.closest('.spell-damage-source-row'));
                 } else if (e.target && e.target.classList.contains('add-scaling-input-btn')) {
                     e.preventDefault();
                     this._addAdditionalScalingInput(e.target.closest('.input-group-row'));
@@ -105,6 +110,13 @@ class SpellCalculator {
                     if (profileElement) {
                         this.removeSpellPowerSource(profileElement);
                     }
+                }
+            });
+
+            // Add event listener for spell power type input changes using event delegation
+            this.spellPowerSourcesContainer.addEventListener('input', (e) => {
+                if (e.target.classList.contains('spell-power-type-input')) {
+                    this.handleInputChange();
                 }
             });
         }
@@ -230,8 +242,7 @@ class SpellCalculator {
                 addBtn.classList.remove('hidden');
             }
 
-            this.calculateSpellDamage();
-            this.manager.saveState();
+            this.handleInputChange();
         });
 
         // Recalculate damage and save state
@@ -264,8 +275,7 @@ class SpellCalculator {
             addScalingButton.classList.remove('hidden');
         }
 
-        this.calculateSpellDamage();
-        this.manager.saveState();
+        this.handleInputChange();
     }
 
 
@@ -298,10 +308,63 @@ class SpellCalculator {
             <label for="spell-hit-count-${newRowId}${this.idSuffix}" class="short-label">Hits</label>
             <input type="number" id="spell-hit-count-${newRowId}${this.idSuffix}" value="1" min="1" class="small-input" title="Number of times this spell component hits">
             <button class="add-scaling-input-btn small-btn" title="Add additional scaling input">+</button>
+            <button class="duplicate-row-btn small-btn" title="Duplicate this damage source">❐</button>
             <button class="remove-row-btn" title="Remove this damage source">&times;</button>
         `;
         this.spellDamageRowsContainer.appendChild(newRow);
         newRow.querySelectorAll('.adaptive-text-input').forEach(input => this._resizeInput(input));
+        return newRow; // Return the newly created row element
+    }
+
+    duplicateSpellDamageRow(originalRow) {
+        if (!originalRow) return;
+
+        // 1. Gather data from the original main row
+        const originalData = {
+            name: originalRow.querySelector('input[id^="spell-name-"]').value,
+            base: originalRow.querySelector('input[id^="spell-damage-"]').value,
+            clScaled: originalRow.querySelector('input[id^="spell-cl-scaling-"]').value,
+            casterLevel: originalRow.querySelector('input[id^="caster-level-"]').value,
+            hitCount: originalRow.querySelector('input[id^="spell-hit-count-"]').value,
+        };
+
+        // 2. Gather data from associated additional scaling rows
+        const additionalScalingsData = [];
+        let nextSibling = originalRow.nextElementSibling;
+        while (nextSibling && nextSibling.classList.contains('additional-scaling-row')) {
+            additionalScalingsData.push({
+                base: nextSibling.querySelector('input[id^="additional-scaling-base-"]').value,
+                clScaled: nextSibling.querySelector('input[id^="additional-scaling-cl-"]').value,
+                profileId: nextSibling.querySelector('select[id^="additional-scaling-sp-select-"]').value,
+            });
+            nextSibling = nextSibling.nextElementSibling;
+        }
+
+        // 3. Create a new row
+        const newRow = this.addSpellDamageRow(new Event('dummy'));
+
+        // 4. Populate the new main row with the original data
+        newRow.querySelector('input[id^="spell-name-"]').value = originalData.name + " (Copy)";
+        newRow.querySelector('input[id^="spell-damage-"]').value = originalData.base;
+        newRow.querySelector('input[id^="spell-cl-scaling-"]').value = originalData.clScaled;
+        newRow.querySelector('input[id^="caster-level-"]').value = originalData.casterLevel;
+        newRow.querySelector('input[id^="spell-hit-count-"]').value = originalData.hitCount;
+
+        // 5. Re-create and populate the additional scaling rows for the new main row
+        additionalScalingsData.forEach(scalingData => {
+            this._addAdditionalScalingInput(newRow); // Create a new scaling row attached to the new main row
+            const lastScalingRow = Array.from(newRow.parentElement.querySelectorAll('.additional-scaling-row')).pop();
+            if (lastScalingRow) {
+                lastScalingRow.querySelector('input[id^="additional-scaling-base-"]').value = scalingData.base;
+                lastScalingRow.querySelector('input[id^="additional-scaling-cl-"]').value = scalingData.clScaled;
+                lastScalingRow.querySelector('select[id^="additional-scaling-sp-select-"]').value = scalingData.profileId;
+            }
+        });
+
+        // 6. Resize inputs and trigger a full recalculation
+        this.resizeAllAdaptiveInputs();
+        this.handleInputChange();
+        this.manager.saveState();
     }
 
     _getInputs() {
@@ -353,6 +416,7 @@ class SpellCalculator {
             isMaximized: this.maximizeCheckbox.checked,
             isIntensified: this.intensifyCheckbox.checked,
             isWellspring: this.wellspringCheckbox.checked,
+            isNightHorrors: this.nightHorrorsCheckbox.checked,
         };
         return inputs;
     }
@@ -365,14 +429,22 @@ class SpellCalculator {
             const critChance = (parseFloat(profileEl.querySelector(`#spell-crit-chance-${profileId}${this.idSuffix}`).value, 10) || 0) / 100;
             const critDamage = (parseFloat(profileEl.querySelector(`#spell-crit-damage-${profileId}${this.idSuffix}`).value, 10) || 0) / 100;
 
+            const type = profileEl.querySelector(`#spell-power-type-${profileId}${this.idSuffix}`).value || '';
             profiles.push({
                 id: profileId,
                 spellPower: spellPower,
                 critChance: critChance,
-                critDamage: critDamage
+                critDamage: critDamage,
+                type: type
             });
         });
+
         return profiles;
+    }
+
+    handleInputChange() {
+        this.calculateSpellDamage();
+        this.manager.updateComparisonTable();
     }
     calculateSpellDamage() {
         let totalBaseDamage = 0;
@@ -390,9 +462,14 @@ class SpellCalculator {
             metamagicSpellPower += 150;
         }
 
+        let totalBoostCritDamageBonus = 0;
         const wellspringSpellPowerBonus = inputs.isWellspring ? 150 : 0;
-        const wellspringCritDamageBonus = inputs.isWellspring ? 0.20 : 0;
-
+        if (inputs.isWellspring) {
+            totalBoostCritDamageBonus += 0.20;
+        }
+        if (inputs.isNightHorrors) {
+            totalBoostCritDamageBonus += 0.25;
+        }
         const totalSpellPowerBonus = metamagicSpellPower + wellspringSpellPowerBonus;
  
         // Update bonus displays for each spell power profile
@@ -401,7 +478,7 @@ class SpellCalculator {
             const spellPowerBonusSpan = profileEl.querySelector(`#metamagic-spell-power-bonus-${profileId}${this.idSuffix}`);
             const critDamageBonusSpan = profileEl.querySelector(`#boost-crit-damage-bonus-${profileId}${this.idSuffix}`);
             if (spellPowerBonusSpan) spellPowerBonusSpan.textContent = totalSpellPowerBonus;
-            if (critDamageBonusSpan) critDamageBonusSpan.textContent = `${wellspringCritDamageBonus * 100}%`;
+            if (critDamageBonusSpan) critDamageBonusSpan.textContent = `${totalBoostCritDamageBonus * 100}%`;
         });
 
         inputs.spellDamageSources.forEach(source => {
@@ -416,7 +493,7 @@ class SpellCalculator {
             if (baseProfile) {
                 const totalSpellPower = baseProfile.spellPower + totalSpellPowerBonus;
                 const spellPowerMultiplier = 1 + (totalSpellPower / 100);
-                const critMultiplier = 2 + baseProfile.critDamage + wellspringCritDamageBonus;
+                const critMultiplier = 2 + baseProfile.critDamage + totalBoostCritDamageBonus;
 
                 const averageHit = baseDamageComponent * spellPowerMultiplier;
                 const averageCrit = averageHit * critMultiplier;
@@ -424,7 +501,7 @@ class SpellCalculator {
 
                 sourceTotalAverage += totalAverage; // Keep track of the running total for the whole source
                 components.push({
-                    name: 'Base + CL',
+                    name: `SP 1: ${baseProfile.type || 'Unnamed'}`,
                     averageHit: averageHit,
                     averageCrit: averageCrit
                 });
@@ -436,7 +513,7 @@ class SpellCalculator {
                 if (profile) {
                     const totalSpellPower = profile.spellPower + totalSpellPowerBonus;
                     const spellPowerMultiplier = 1 + (totalSpellPower / 100);
-                    const critMultiplier = 2 + profile.critDamage + wellspringCritDamageBonus;
+                    const critMultiplier = 2 + profile.critDamage + totalBoostCritDamageBonus;
 
                     // Combine base and CL-scaled damage for this component
                     const damageComponent = scaling.base + (scaling.clScaled * source.casterLevel);
@@ -446,7 +523,7 @@ class SpellCalculator {
 
                     sourceTotalAverage += totalAverage; // Add to the running total
                     components.push({
-                        name: `SP ${index + 2}`,
+                        name: `SP ${scaling.profileId}: ${profile.type || 'Unnamed'}`,
                         averageHit: averageHit,
                         averageCrit: averageCrit
                     });
@@ -494,7 +571,7 @@ class SpellCalculator {
             spell.components.forEach(component => {
                 const p = document.createElement('p');
                 p.style.marginLeft = '1rem';
-                p.innerHTML = `<em>${component.name}:</em> Avg Hit: ${component.averageHit.toFixed(2)}, Avg Crit: ${component.averageCrit.toFixed(2)}`;
+                p.innerHTML = `<em>${component.name}</em><br>Avg Hit: ${component.averageHit.toFixed(2)}, Avg Crit: ${component.averageCrit.toFixed(2)}`;
                 spellContainer.appendChild(p);
             });
             individualSpellDamageSummary.appendChild(spellContainer);
@@ -524,7 +601,7 @@ class SpellCalculator {
         newProfile.innerHTML = `
             <div class="profile-header">
                 <label class="section-headline">Spell Power & Criticals ${newProfileId}</label>
-                <input type="text" id="spell-power-type-${newProfileId}${this.idSuffix}" class="adaptive-text-input"
+                <input type="text" id="spell-power-type-${newProfileId}${this.idSuffix}" class="adaptive-text-input spell-power-type-input"
                     placeholder="Element Type" title="e.g., Fire, Acid, etc." value="${typeValue}">
             </div>
             <div class="input-group-row">
@@ -551,8 +628,7 @@ class SpellCalculator {
         // Only trigger recalculation and save if we are NOT in a bulk-loading state (i.e., state is null)
         if (state === null) {
             this.updateSpellPowerSelectors();
-            this.calculateSpellDamage();
-            this.manager.saveState();
+            this.handleInputChange();
         }
     }
 
@@ -563,8 +639,7 @@ class SpellCalculator {
         }
         profileElement.remove();
         this.updateSpellPowerSelectors();
-        this.calculateSpellDamage();
-        this.manager.saveState();
+        this.handleInputChange();
     }
 
     updateSpellPowerSelectors() {

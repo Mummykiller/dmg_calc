@@ -515,6 +515,20 @@ hr /* A horizontal line used to visually separate different sections of the page
     border-color: var(--border-color);
 }
 
+/* Style for the duplicate button */
+.duplicate-row-btn {
+    font-size: 1.3rem; /* Increase font size to make the icon larger */
+    line-height: 1; /* Ensure proper vertical alignment */
+    padding: 0.1rem 0.5rem; /* Adjust padding to match other icon buttons */
+    background-color: transparent;
+    color: var(--label-color); /* Use a more neutral color */
+}
+
+.duplicate-row-btn:hover {
+    background-color: var(--stats-group-bg);
+    color: var(--text-color); /* Slightly brighten on hover */
+}
+
 /* --- Modal Styles --- */
 .modal-backdrop /* The darkened background that appears behind a pop-up window, making the pop-up stand out. */ {
     position: fixed;

@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>DDO Damage Calculator</title>
-    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="style.css?v=1.0.1">
 </head>
 
 <body>
@@ -337,6 +337,7 @@
                             <input type="number" id="spell-hit-count-1" value="1" min="1" class="small-input"
                                 title="Number of times this spell component hits">
                             <button class="add-scaling-input-btn small-btn" title="Add additional scaling input">+</button>
+                            <button class="duplicate-row-btn small-btn" title="Duplicate this damage source">❐</button>
                             <button class="remove-row-btn" title="Remove this damage source">&times;</button>
                         </div>
                     </div>
@@ -390,6 +391,8 @@
                     <div class="input-group-row">
                         <input type="checkbox" id="boost-wellspring"><label for="boost-wellspring"
                             class="checkbox-label">Wellspring of Power</label>
+                        <input type="checkbox" id="boost-night-horrors"><label for="boost-night-horrors"
+                            class="checkbox-label">Night Horrors</label>
                     </div>
                 </div>
                 <button id="calculate-spell-btn">Calculate Spell Damage</button>
@@ -435,8 +438,8 @@
 
 
     <!-- Link to the JavaScript file at the end of the body -->
-    <script src="SpellCalculator.js"></script>
-    <script src="script.js"></script>
+    <script src="SpellCalculator.js?v=1.0.1"></script>
+    <script src="script.js?v=1.0.1"></script>
 </body>
 
 </html>
